@@ -180,7 +180,6 @@ bool send_assistant_request() {
   Serial.println("headers sent");
   copyStreamToPrint(requestFile, client);
   Serial.println("body sent");
-  SPIFFS.end();
 
   // Check for success
   String line = client.readStringUntil('\n');
@@ -195,6 +194,18 @@ bool send_assistant_request() {
 
   client.stop();
   return false;
+}
+
+// Send the request to Google Assistant, refreshing the auth token if necessary.
+void auth_and_send_request() {
+  if (send_assistant_request()) {
+    return;
+  }
+  Serial.println("First request failed, refreshing token");
+  if (!refresh_oauth()) {
+    return;
+  }
+  send_assistant_request();
 }
 
 //////////////////
@@ -212,14 +223,8 @@ void setup() {
   wifi_connect();
 
   SPIFFS.begin();
-
-  if (send_assistant_request()) {
-    return;
-  }
-  if (!refresh_oauth()) {
-    return;
-  }
-  send_assistant_request();
+  auth_and_send_request();
+  SPIFFS.end();
 
   // Power can go off, if we're wired up that way.
   digitalWrite(EN_PIN, LOW);
