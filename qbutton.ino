@@ -98,6 +98,16 @@ bool refresh_oauth() {
   client.print(body);
   copyStreamToPrint(refreshTokenFile, client);
   refreshTokenFile.close();
+
+  // Check status
+  String line = client.readStringUntil('\n');
+  if (!line.startsWith("HTTP/1.1 200 OK")) {
+    Serial.println(line);
+    copyStreamToPrint(client, Serial);
+    client.stop();
+    return false;
+  }
+
   // Skip headers
   client.find("\r\n\r\n");
 
