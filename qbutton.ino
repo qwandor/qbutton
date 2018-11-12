@@ -180,19 +180,56 @@ bool refresh_oauth() {
   return true;
 }
 
-void wifi_connect() {
-  Serial.print("connecting to ");
-  Serial.println(ssid);
+boolean wifi_connect() {
+  // Read SSID and password from file.
+  File wifiFile = SPIFFS.open("/wifi.txt", "r");
+  if (!wifiFile) {
+    Serial.println("Failed to open /wifi.txt for reading.");
+    return false;
+  }
+  String ssid = wifiFile.readStringUntil('\n');
+  String password = wifiFile.readStringUntil('\n');
+  wifiFile.close();
+
+  Serial.print("connecting to '");
+  Serial.print(ssid.c_str());
+  Serial.print("' with password '");
+  Serial.print(password.c_str());
+  Serial.println("'");
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+  WiFi.begin(ssid.c_str(), password.c_str());
+  //WiFi.begin(ssid, password);
+  // Try to connect for 5 seconds
+  for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i) {
     delay(500);
     Serial.print(".");
+  }
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Couldn't connect");
+    return false;
   }
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  return true;
+}
+
+// Connect to the configured network if possible, or else run as an access point.
+void wifi_setup() {
+  if (wifi_connect()) {
+    return;
+  }
+
+  // Couldn't connect, try being an AP.
+  IPAddress local_ip(192, 168, 0, 1);
+  IPAddress gateway(192, 168, 0, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  WiFi.softAPConfig(local_ip, gateway, subnet);
+  WiFi.softAP("qButton");
+  Serial.println("Running AP qButton. Local IP address:");
+  Serial.println(WiFi.softAPIP());
 }
 
 // Return true on success, false on failure for any reason.
@@ -267,19 +304,52 @@ void auth_and_send_request() {
 ///////////////////////////
 
 void handle_root() {
+  // If a new SSID and password have been sent, save them.
+  const String &new_ssid = server.arg("ssid");
+  const String &new_password = server.arg("password");
+  if (new_ssid.length() > 0) {
+    File wifiFile = SPIFFS.open("/wifi.txt", "w");
+    if (!wifiFile) {
+      Serial.println("Failed to open /wifi.txt for writing.");
+      server.send(500, "text/plain", "Failed to open /wifi.txt for writing");
+      return;
+    }
+    // Don't use println, because it adds '\r' characters which we don't want.
+    wifiFile.print(new_ssid);
+    wifiFile.print('\n');
+    wifiFile.print(new_password);
+    wifiFile.print('\n');
+    wifiFile.close();
+    Serial.println("wrote new SSID and password");
+    Serial.println(new_ssid);
+  }
+
+  // Read whatever is on disk.
+  String ssid, password;
+  File wifiFile = SPIFFS.open("/wifi.txt", "r");
+  if (!wifiFile) {
+    Serial.println("Failed to open /wifi.txt for reading.");
+  } else {
+    ssid = wifiFile.readStringUntil('\n');
+    password = wifiFile.readStringUntil('\n');
+    wifiFile.close();
+  }
+
   server.send(200, "text/html", String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
     WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
-    "</body></html>");
+    "<form method=\"post\" action=\"/\">" +
+    "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
+    "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
+    "<input type=\"submit\" value=\"Update\"/>" +
+    "</form></body></html>");
 }
 
 void handle_oauth() {
   const String &code = server.arg("code");
-  if (code) {
-    SPIFFS.begin();
+  if (code.length() > 0) {
     boolean success = oauth_with_code(code);
-    SPIFFS.end();
     if (success) {
       server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Success</p><a href=\"/\">Home</a></body></html>");
     } else {
@@ -311,9 +381,8 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
 
-  wifi_connect();
-
   SPIFFS.begin();
+  wifi_setup();
   auth_and_send_request();
   SPIFFS.end();
 
@@ -324,6 +393,7 @@ void setup() {
   ESP.deepSleep(0);
   Serial.println("done sleeping");
 
+  SPIFFS.begin();
   start_webserver();
 }
 
