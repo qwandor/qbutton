@@ -3,6 +3,9 @@
 #include <WiFiClientSecure.h>
 #include <FS.h>
 
+// Pin which is connected via a resistor to CH_PD, to latch power on
+#define EN_PIN 4
+
 const char* ssid = "";
 const char* password = "";
 
@@ -184,7 +187,15 @@ bool send_assistant_request() {
   return false;
 }
 
+//////////////////
+// Entry points //
+//////////////////
+
 void setup() {
+  // Keep power on until we're done
+  pinMode(EN_PIN, OUTPUT);
+  digitalWrite(EN_PIN, HIGH);
+
   Serial.begin(115200);
   Serial.println();
 
@@ -199,6 +210,13 @@ void setup() {
     return;
   }
   send_assistant_request();
+
+  // Power can go off, if we're wired up that way.
+  digitalWrite(EN_PIN, LOW);
+  // Deep sleep until RESET is taken low.
+  Serial.println("sleeping");
+  ESP.deepSleep(0);
+  Serial.println("done sleeping");
 }
 
 void loop() {
