@@ -51,7 +51,9 @@ void store_token(const char *path, const char *token) {
     Serial.println(" for writing.");
     return;
   }
-  tokenFile.println(token);
+  // Don't use println, because it adds '\r' characters which we don't want.
+  tokenFile.print(token);
+  tokenFile.print('\n');
   tokenFile.close();
 }
 
