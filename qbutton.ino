@@ -1,4 +1,5 @@
 #include <ArduinoJson.h>
+#include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <FS.h>
@@ -20,6 +21,8 @@ const char *client_secret = "";
 // SHA1 fingerprint of the certificate
 const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99 14 95";
 
+ESP8266WebServer server(80);
+
 // Copy all available bytes from the given Stream to the given Print
 void copyStreamToPrint(Stream &from, Print &to) {
   while (true) {
@@ -40,10 +43,12 @@ void print_response(WiFiClientSecure &client) {
   }
 }
 
-void store_token(const char *token) {
-  File tokenFile = SPIFFS.open("/token.txt", "w");
+void store_token(const char *path, const char *token) {
+  File tokenFile = SPIFFS.open(path, "w");
   if (!tokenFile) {
-    Serial.println("Failed to open /token.txt for writing.");
+    Serial.print("Failed to open ");
+    Serial.print(path);
+    Serial.println(" for writing.");
     return;
   }
   tokenFile.println(token);
@@ -59,6 +64,60 @@ String load_token() {
   String token = tokenFile.readStringUntil('\n');
   tokenFile.close();
   return token;
+}
+
+// Given an OAuth code, get a new token and refresh token and store them.
+bool oauth_with_code(const String &code) {
+  WiFiClientSecure client;
+  if (!client.connect(oauth_host, httpsPort)) {
+    Serial.println("connection failed");
+    return false;
+  }
+
+  if (client.verify(fingerprint, oauth_host)) {
+    Serial.println("certificate matches");
+  } else {
+    Serial.println("certificate doesn't match");
+  }
+
+  String body = String("client_id=") + client_id + "&" +
+               "client_secret=" + client_secret + "&" +
+               "grant_type=authorization_code&" +
+               "redirect_uri=http://" + WiFi.localIP().toString() + "/oauth&" +
+               "code=" + code;
+  client.print(String("POST /oauth2/v4/token HTTP/1.1\r\n") +
+               "Host: " + oauth_host + "\r\n" +
+               "Content-Type: application/x-www-form-urlencoded\r\n" +
+               "Content-Length: " + body.length() + "\r\n" +
+               "Connection: close\r\n\r\n");
+  client.print(body);
+
+  // Check status
+  String line = client.readStringUntil('\n');
+  if (!line.startsWith("HTTP/1.1 200 OK")) {
+    Serial.println(line);
+    print_response(client);
+    client.stop();
+    return false;
+  }
+
+  // Skip headers
+  client.find("\r\n\r\n");
+
+  DynamicJsonBuffer jb;
+  JsonObject &root = jb.parseObject(client);
+  if (!root.success()) {
+    Serial.println("Failed to parse JSON response from OAuth");
+    return false;
+  }
+  const char *token = root["access_token"];
+  const char *refresh_token = root["refresh_token"];
+  Serial.print("got new access token ");
+  Serial.println(token);
+  store_token("/refresh_token.txt", refresh_token);
+  store_token("/token.txt", token);
+  client.stop();
+  return true;
 }
 
 // Use the refresh token to get a new auth token.
@@ -116,7 +175,7 @@ bool refresh_oauth() {
   const char *token = root["access_token"];
   Serial.print("got new access token ");
   Serial.println(token);
-  store_token(token);
+  store_token("/token.txt", token);
   client.stop();
   return true;
 }
@@ -203,6 +262,43 @@ void auth_and_send_request() {
   send_assistant_request();
 }
 
+///////////////////////////
+// HTTP request handlers //
+///////////////////////////
+
+void handle_root() {
+  server.send(200, "text/html", String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
+    "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
+    "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
+    WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
+    "</body></html>");
+}
+
+void handle_oauth() {
+  const String &code = server.arg("code");
+  if (code) {
+    SPIFFS.begin();
+    boolean success = oauth_with_code(code);
+    SPIFFS.end();
+    if (success) {
+      server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Success</p><a href=\"/\">Home</a></body></html>");
+    } else {
+      server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Failure</p><a href=\"/\">Home</a></body></html>");
+    }
+  } else {
+    server.send(200, "text/html", String("<html><head><title>Error</title></head><body><h1>Authentication error</h1><p>") +
+      server.arg("error") + "</p></body></html>");
+  }
+}
+
+// Run web server to let the user authenticate their account.
+void start_webserver() {
+  server.on("/", handle_root);
+  server.on("/oauth", handle_oauth);
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
 //////////////////
 // Entry points //
 //////////////////
@@ -227,7 +323,10 @@ void setup() {
   Serial.println("sleeping");
   ESP.deepSleep(0);
   Serial.println("done sleeping");
+
+  start_webserver();
 }
 
 void loop() {
+  server.handleClient();
 }
