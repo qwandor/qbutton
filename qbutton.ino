@@ -32,15 +32,11 @@ void copyStreamToPrint(Stream &from, Print &to) {
   }
 }
 
-// Read all headers from a client, printing them to Serial for debugging.
-void skip_headers(WiFiClientSecure &client) {
+// Read all remaining response from a client, printing it to Serial for debugging.
+void print_response(WiFiClientSecure &client) {
   while (client.connected()) {
     String line = client.readStringUntil('\n');
     Serial.println(line);
-    if (line == "\r") {
-      Serial.println("headers received");
-      break;
-    }
   }
 }
 
@@ -103,7 +99,7 @@ bool refresh_oauth() {
   String line = client.readStringUntil('\n');
   if (!line.startsWith("HTTP/1.1 200 OK")) {
     Serial.println(line);
-    copyStreamToPrint(client, Serial);
+    print_response(client);
     client.stop();
     return false;
   }
@@ -181,19 +177,18 @@ bool send_assistant_request() {
   copyStreamToPrint(requestFile, client);
   Serial.println("body sent");
 
-  // Check for success
+  // Check status
   String line = client.readStringUntil('\n');
-  if (line.startsWith("HTTP/1.1 200 OK")) {
-    Serial.println("success");
+  if (!line.startsWith("HTTP/1.1 200 OK")) {
+    Serial.println(line);
+    print_response(client);
     client.stop();
-    return true;
+    return false;
   }
-  Serial.println(line);
-  // Print headers
-  skip_headers(client);
 
+  Serial.println("success");
   client.stop();
-  return false;
+  return true;
 }
 
 // Send the request to Google Assistant, refreshing the auth token if necessary.
