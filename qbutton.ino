@@ -1,4 +1,5 @@
 #include <ArduinoJson.h>
+#include <DoubleResetDetect.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
@@ -6,6 +7,7 @@
 
 // Pin which is connected via a resistor to CH_PD, to latch power on
 #define EN_PIN 4
+#define LED_PIN 2
 
 const char* ssid = "";
 const char* password = "";
@@ -21,7 +23,11 @@ const char *client_secret = "";
 // SHA1 fingerprint of the certificate
 const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99 14 95";
 
+#define DRD_TIMEOUT 0.5
+#define DRD_ADDRESS 0x00
+
 ESP8266WebServer server(80);
+DoubleResetDetect drd(DRD_TIMEOUT, DRD_ADDRESS);
 
 // Copy all available bytes from the given Stream to the given Print
 void copyStreamToPrint(Stream &from, Print &to) {
@@ -219,9 +225,10 @@ boolean wifi_connect() {
 }
 
 // Connect to the configured network if possible, or else run as an access point.
-void wifi_setup() {
+// Returns false if it was unable to connect to the configured network and so is in AP mode.
+bool wifi_setup() {
   if (wifi_connect()) {
-    return;
+    return true;
   }
 
   // Couldn't connect, try being an AP.
@@ -232,6 +239,8 @@ void wifi_setup() {
   WiFi.softAP("qButton");
   Serial.println("Running AP qButton. Local IP address:");
   Serial.println(WiFi.softAPIP());
+
+  return false;
 }
 
 // Return true on success, false on failure for any reason.
@@ -380,22 +389,38 @@ void setup() {
   pinMode(EN_PIN, OUTPUT);
   digitalWrite(EN_PIN, HIGH);
 
+  bool double_reset = drd.detect();
+
   Serial.begin(115200);
   Serial.println();
 
-  SPIFFS.begin();
-  wifi_setup();
-  auth_and_send_request();
-  SPIFFS.end();
-
-  // Power can go off, if we're wired up that way.
-  digitalWrite(EN_PIN, LOW);
-  // Deep sleep until RESET is taken low.
-  Serial.println("sleeping");
-  ESP.deepSleep(0);
-  Serial.println("done sleeping");
+  if (double_reset) {
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, LOW);
+    Serial.println("detected double reset");
+  }
 
   SPIFFS.begin();
+
+  // No point trying to send the Google Assistant request if we are running in AP mode.
+  if (wifi_setup()) {
+    auth_and_send_request();
+
+    // If the user double-presses the reset button, skip sleeping so that they can reconfigure it.
+    if (!double_reset) {
+      // Go to sleep and/or turn off.
+      SPIFFS.end();
+      // Power can go off, if we're wired up that way.
+      digitalWrite(EN_PIN, LOW);
+      // Deep sleep until RESET is taken low.
+      Serial.println("sleeping");
+      ESP.deepSleep(0);
+
+      Serial.println("done sleeping");
+      SPIFFS.begin();
+    }
+  }
+
   start_webserver();
 }
 
