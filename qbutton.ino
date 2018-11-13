@@ -188,7 +188,7 @@ bool refresh_oauth() {
   return true;
 }
 
-boolean wifi_connect() {
+bool wifi_connect() {
   // Read SSID and password from file.
   File wifiFile = SPIFFS.open("/wifi.txt", "r");
   if (!wifiFile) {
@@ -360,7 +360,7 @@ void handle_root() {
 void handle_oauth() {
   const String &code = server.arg("code");
   if (code.length() > 0) {
-    boolean success = oauth_with_code(code);
+    bool success = oauth_with_code(code);
     if (success) {
       server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Success</p><a href=\"/\">Home</a></body></html>");
     } else {
