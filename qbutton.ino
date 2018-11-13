@@ -283,6 +283,7 @@ bool send_assistant_request() {
   Serial.println("headers sent");
   copyStreamToPrint(requestFile, client);
   Serial.println("body sent");
+  unsigned long sent_request_time = millis();
 
   // Check status
   String line = client.readStringUntil('\n');
@@ -293,7 +294,9 @@ bool send_assistant_request() {
     return false;
   }
 
-  Serial.println("success");
+  Serial.print("success after ");
+  Serial.print(millis() - sent_request_time);
+  Serial.println(" ms");
   client.stop();
   return true;
 }
