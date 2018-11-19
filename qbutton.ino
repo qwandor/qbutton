@@ -1,5 +1,6 @@
 #include <ArduinoJson.h>
 #include <DoubleResetDetect.h>
+#include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
@@ -422,6 +423,10 @@ void setup() {
       Serial.println("done sleeping");
       SPIFFS.begin();
     }
+  }
+
+  if (!MDNS.begin("qbutton")) {
+    Serial.println("Error starting mDNS");
   }
 
   start_webserver();
