@@ -10,9 +10,6 @@
 #define EN_PIN 4
 #define LED_PIN 2
 
-const char* ssid = "";
-const char* password = "";
-
 const char *oauth_host = "www.googleapis.com";
 const char* host = "embeddedassistant.googleapis.com";
 const int httpsPort = 443;
