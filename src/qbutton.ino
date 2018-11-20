@@ -4,7 +4,11 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
+#include <pb_arduino.h>
 #include <WiFiClientSecure.h>
+
+#include "embedded_assistant.pb.h"
+#include "stream_body.pb.h"
 
 // Pin which is connected via a resistor to CH_PD, to latch power on
 #define EN_PIN 4
@@ -16,6 +20,8 @@ const int httpsPort = 443;
 
 const char *client_id = "";
 const char *client_secret = "";
+const char *device_id = "my_device_id";
+const char *device_model_id = "";
 
 // Use web browser to view and copy
 // SHA1 fingerprint of the certificate
@@ -26,6 +32,9 @@ const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99
 
 ESP8266WebServer server(80);
 DoubleResetDetect drd(DRD_TIMEOUT, DRD_ADDRESS);
+
+// Copy from a char * to a char[n] buffer without overrunning the buffer, making sure to end with a \0.
+#define safe_copy(src, dest) snprintf((dest), sizeof(dest), "%s", (src))
 
 // Copy all available bytes from the given Stream to the given Print
 void copyStreamToPrint(Stream &from, Print &to) {
@@ -59,6 +68,51 @@ void store_token(const char *path, const char *token) {
   tokenFile.print(token);
   tokenFile.print('\n');
   tokenFile.close();
+}
+
+bool encode_assist_request(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
+  const google_assistant_embedded_v1alpha2_AssistRequest *assist_request = static_cast<const google_assistant_embedded_v1alpha2_AssistRequest *>(*arg);
+  if (!pb_encode_tag_for_field(stream, field)) {
+    return false;
+  }
+  return pb_encode_submessage(stream, google_assistant_embedded_v1alpha2_AssistRequest_fields, assist_request);
+}
+
+// Encode the given command as the appropriate protobuf and write it to /request.pb.
+bool update_command(const char *command) {
+  File file = SPIFFS.open("/request.pb", "w");
+  if (!file) {
+    Serial.print("Failed to open /request.pb for writing.");
+    return false;
+  }
+
+  google_assistant_embedded_v1alpha2_AssistRequest assist_request = google_assistant_embedded_v1alpha2_AssistRequest_init_default;
+  assist_request.config.audio_out_config.encoding = google_assistant_embedded_v1alpha2_AudioOutConfig_Encoding_MP3;
+  assist_request.config.audio_out_config.sample_rate_hertz = 16000;
+  assist_request.config.audio_in_config.encoding = google_assistant_embedded_v1alpha2_AudioInConfig_Encoding_LINEAR16;
+  assist_request.config.audio_in_config.sample_rate_hertz = 16000;
+  assist_request.config.screen_out_config.screen_mode = google_assistant_embedded_v1alpha2_ScreenOutConfig_ScreenMode_PLAYING;
+  safe_copy("en-US", assist_request.config.dialog_state_in.language_code);
+  safe_copy(device_id, assist_request.config.device_config.device_id);
+  safe_copy(device_model_id, assist_request.config.device_config.device_model_id);
+  safe_copy(command, assist_request.config.text_query);
+
+  google_rpc_StreamBody stream_body = google_rpc_StreamBody_init_default;
+  stream_body.message.funcs.encode = encode_assist_request;
+  stream_body.message.arg = &assist_request;
+  pb_ostream_s pb_out = as_pb_ostream(file);
+  if (!pb_encode(&pb_out, google_rpc_StreamBody_fields, &stream_body)) {
+    Serial.print("Failed encoding StreamBody: ");
+    Serial.println(PB_GET_ERROR(&pb_out));
+    file.close();
+    return false;
+  }
+  Serial.print("Updated command to \"");
+  Serial.print(command);
+  Serial.println("\"");
+
+  file.close();
+  return true;
 }
 
 String load_token() {
@@ -405,6 +459,8 @@ void setup() {
 
   // No point trying to send the Google Assistant request if we are running in AP mode.
   if (wifi_setup()) {
+    update_command("fairy lights on for 10 seconds");
+
     auth_and_send_request();
 
     // If the user double-presses the reset button, skip sleeping so that they can reconfigure it.
