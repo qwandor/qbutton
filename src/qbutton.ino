@@ -373,6 +373,7 @@ void handle_root() {
   // If a new SSID and password have been sent, save them.
   const String &new_ssid = server.arg("ssid");
   const String &new_password = server.arg("password");
+  const String &new_command = server.arg("command");
   if (new_ssid.length() > 0) {
     File wifiFile = SPIFFS.open("/wifi.txt", "w");
     if (!wifiFile) {
@@ -388,6 +389,10 @@ void handle_root() {
     wifiFile.close();
     Serial.println("wrote new SSID and password");
     Serial.println(new_ssid);
+  }
+  if (new_command.length() > 0) {
+    update_command(new_command.c_str());
+    send_assistant_request();
   }
 
   // Read whatever is on disk.
@@ -408,8 +413,11 @@ void handle_root() {
     "<form method=\"post\" action=\"/\">" +
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
     "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update\"/>" +
-    "</form></body></html>");
+    "<input type=\"submit\" value=\"Update WiFi config\"/>" +
+    "</form><form method=\"post\" action=\"/\">" +
+    "Command: <input type=\"text\" name=\"command\">" +
+    "<input type=\"submit\" value=\"Update command\"/>" +
+     "</form></body></html>");
 }
 
 void handle_oauth() {
@@ -459,8 +467,6 @@ void setup() {
 
   // No point trying to send the Google Assistant request if we are running in AP mode.
   if (wifi_setup()) {
-    update_command("fairy lights on for 10 seconds");
-
     auth_and_send_request();
 
     // If the user double-presses the reset button, skip sleeping so that they can reconfigure it.
