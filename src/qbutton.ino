@@ -480,6 +480,7 @@ void setup() {
       ESP.deepSleep(0);
 
       Serial.println("done sleeping");
+      digitalWrite(EN_PIN, HIGH);
       SPIFFS.begin();
     }
   }
