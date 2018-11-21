@@ -456,10 +456,10 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println();
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
   if (double_reset) {
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
     Serial.println("detected double reset");
   }
 
