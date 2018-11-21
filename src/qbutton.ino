@@ -492,8 +492,6 @@ void setup() {
       Serial.println("sleeping");
       // Power can go off, if we're wired up that way.
       digitalWrite(EN_PIN, LOW);
-      // Deep sleep until RESET is taken low.
-      ESP.deepSleep(0);
 
       Serial.println("done sleeping");
       digitalWrite(EN_PIN, HIGH);
