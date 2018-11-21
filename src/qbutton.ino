@@ -473,10 +473,10 @@ void setup() {
     if (!double_reset) {
       // Go to sleep and/or turn off.
       SPIFFS.end();
+      Serial.println("sleeping");
       // Power can go off, if we're wired up that way.
       digitalWrite(EN_PIN, LOW);
       // Deep sleep until RESET is taken low.
-      Serial.println("sleeping");
       ESP.deepSleep(0);
 
       Serial.println("done sleeping");
