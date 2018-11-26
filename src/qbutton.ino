@@ -428,7 +428,7 @@ void handle_root() {
   }
   if (new_command.length() > 0) {
     update_command(new_command.c_str());
-    send_assistant_request();
+    auth_and_send_request();
   }
 
   // Read whatever is on disk.
