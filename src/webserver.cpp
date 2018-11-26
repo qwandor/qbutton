@@ -24,21 +24,46 @@ limitations under the License.
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
+#include <Vector.h>
 
 static ESP8266WebServer server(80);
 static String admin_password;
+String storage_array[MAX_COMMANDS];
+Vector<String> button_commands(storage_array);
 
-// Write the given command to /command.txt.
-bool update_command(const char *command) {
-  LOG("Updating command to \"");
-  LOG(command);
-  LOGLN("\"");
-
-  return write_line_to_file("/command.txt", command);
+// Save all commands to a file.
+bool save_commands() {
+  File file = SPIFFS.open("/commands.txt", "w");
+  if (!file) {
+    LOGLN("Failed to open /commands.txt for writing.");
+    return false;
+  }
+  for (uint i = 0; i < button_commands.size(); ++i) {
+    // Don't use println, because it adds '\r' characters which we don't want.
+    file.print(button_commands[i]);
+    file.print('\n');
+  }
+  file.close();
+  return true;
 }
 
-String load_command() {
-  return read_line_from_file("/command.txt");
+bool load_commands() {
+  File file = SPIFFS.open("/commands.txt", "r");
+  if (!file) {
+    LOGLN("Failed to open /commands.txt for reading.");
+    return false;
+  }
+  button_commands.clear();
+  while (file.available() > 0) {
+    String command = file.readStringUntil('\n');
+    if (command.length() == 0) {
+      break;
+    }
+    button_commands.push_back(command);
+
+  }
+  file.close();
+  return true;
 }
 
 bool write_wifi_config(const String &ssid, const String &password) {
@@ -72,7 +97,7 @@ void handle_root() {
   const String &new_admin_password = server.arg("admin_password");
   const String &new_ssid = server.arg("ssid");
   const String &new_password = server.arg("password");
-  const String &new_command = server.arg("command");
+  const String &new_command = server.arg("new_command");
   String error;
   if (new_admin_password.length() > 0) {
     if (write_line_to_file("/password.txt", new_admin_password.c_str())) {
@@ -87,8 +112,25 @@ void handle_root() {
       error = "Failed to write WiFi config.";
     }
   }
-  if (new_command.length() > 0) {
-    update_command(new_command.c_str());
+  // Delete and update commands
+  bool updated_commands = false;
+  for (uint i = 0; i < button_commands.size(); ++i) {
+    if (server.hasArg(String("delete") + i)) {
+      button_commands.remove(i);
+      updated_commands = true;
+      break;
+    } else if (server.hasArg(String("command") + i)) {
+      button_commands[i] = server.arg(String("command") + i);
+      updated_commands = true;
+    }
+  }
+  if (updated_commands) {
+    save_commands();
+  }
+  if (new_command.length() > 0 && button_commands.size() < MAX_COMMANDS) {
+    // Add a new command
+    button_commands.push_back(new_command);
+    save_commands();
     auth_and_send_request(new_command);
   }
 
@@ -119,10 +161,16 @@ void handle_root() {
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
     "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update WiFi config\"/>" +
-    "</form><form method=\"post\" action=\"/\">" +
-    "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">" +
-    "<input type=\"submit\" value=\"Update command\"/>" +
-     "</form></body></html>";
+    "</form><h2>Commands</h2><form method=\"post\" action=\"/\"><ul>";
+  for (uint i = 0; i < button_commands.size(); ++i) {
+    page = page + "<li><input type=\"text\" name=\"command" + i + "\" value=\"" + button_commands[i] + "\"/><input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/></li>";
+  }
+  page = page + "</ul>" +
+     "<input type=\"submit\" value=\"Update commands\"/></form>";
+  if (button_commands.size() < MAX_COMMANDS) {
+    page += "<form method=\"post\" action=\"/\"><input type=\"text\" name=\"new_command\"/><input type=\"submit\" value=\"Add command\"/></form>";
+  }
+  page += "</body></html>";
   server.send(200, "text/html", page);
 }
 
@@ -143,6 +191,7 @@ void handle_oauth() {
 
 // Run web server to let the user authenticate their account.
 void start_webserver() {
+  load_commands();
   admin_password = read_line_from_file("/password.txt");
 
   server.on("/", handle_root);

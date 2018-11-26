@@ -38,10 +38,7 @@ void setup() {
 
   SPIFFS.begin();
 
-  // No point trying to send the Google Assistant request if we are running in AP mode.
-  if (wifi_setup()) {
-    auth_and_send_request(load_command());
-  }
+  wifi_setup();
 
   if (!MDNS.begin(MDNS_HOSTNAME)) {
     LOGLN("Error starting mDNS");

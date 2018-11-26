@@ -19,6 +19,7 @@ limitations under the License.
 #define LED_PIN 2
 
 #define REQUEST_BUFFER_SIZE 200
+#define MAX_COMMANDS 20
 
 // Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
 #define NETWORK_LOGGING 0
