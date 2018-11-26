@@ -472,10 +472,10 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println();
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
   if (double_reset) {
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
     Serial.println("detected double reset");
   }
 
@@ -489,13 +489,14 @@ void setup() {
     if (!double_reset) {
       // Go to sleep and/or turn off.
       SPIFFS.end();
+      Serial.println("sleeping");
       // Power can go off, if we're wired up that way.
       digitalWrite(EN_PIN, LOW);
       // Deep sleep until RESET is taken low.
-      Serial.println("sleeping");
       ESP.deepSleep(0);
 
       Serial.println("done sleeping");
+      digitalWrite(EN_PIN, HIGH);
       SPIFFS.begin();
     }
   }
