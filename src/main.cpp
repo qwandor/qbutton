@@ -22,53 +22,25 @@ limitations under the License.
 #include "wifi.h"
 
 #include <ArduinoOTA.h>
-#include <DoubleResetDetect.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
-
-DoubleResetDetect drd(DRD_TIMEOUT, DRD_ADDRESS);
 
 //////////////////
 // Entry points //
 //////////////////
 
 void setup() {
-  // Keep power on until we're done
-  pinMode(EN_PIN, OUTPUT);
-  digitalWrite(EN_PIN, HIGH);
-
-  bool double_reset = drd.detect();
-
-  Serial.begin(115200);
+  Serial.begin(9200);
   Serial.println();
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
-
-  if (double_reset) {
-    LOGLN("detected double reset");
-  }
 
   SPIFFS.begin();
 
   // No point trying to send the Google Assistant request if we are running in AP mode.
   if (wifi_setup()) {
     auth_and_send_request(load_command());
-
-    // If the user double-presses the reset button, skip sleeping so that they can reconfigure it.
-    if (!double_reset) {
-      // Go to sleep and/or turn off.
-      SPIFFS.end();
-      LOGLN("sleeping");
-      // Power can go off, if we're wired up that way.
-      digitalWrite(EN_PIN, LOW);
-      // Deep sleep until RESET is taken low.
-      ESP.deepSleep(0);
-
-      LOGLN("done sleeping");
-      digitalWrite(EN_PIN, HIGH);
-      SPIFFS.begin();
-    }
   }
 
   if (!MDNS.begin(MDNS_HOSTNAME)) {

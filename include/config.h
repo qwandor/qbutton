@@ -16,14 +16,9 @@ limitations under the License.
 
 #pragma once
 
-// Pin which is connected via a resistor to CH_PD, to latch power on
-#define EN_PIN 4
 #define LED_PIN 2
 
 #define REQUEST_BUFFER_SIZE 200
-
-#define DRD_TIMEOUT 0.5
-#define DRD_ADDRESS 0x00
 
 // Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
 #define NETWORK_LOGGING 0
