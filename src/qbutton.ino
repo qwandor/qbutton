@@ -29,6 +29,7 @@ limitations under the License.
 // Pin which is connected via a resistor to CH_PD, to latch power on
 #define EN_PIN 4
 #define LED_PIN 2
+#define REQUEST_BUFFER_SIZE 200
 
 const char *oauth_host = "www.googleapis.com";
 const char* host = "embeddedassistant.googleapis.com";
@@ -72,18 +73,19 @@ void print_response(WiFiClientSecure &client) {
   }
 }
 
-void store_token(const char *path, const char *token) {
+bool store_token(const char *path, const char *token) {
   File tokenFile = SPIFFS.open(path, "w");
   if (!tokenFile) {
     Serial.print("Failed to open ");
     Serial.print(path);
     Serial.println(" for writing.");
-    return;
+    return false;
   }
   // Don't use println, because it adds '\r' characters which we don't want.
   tokenFile.print(token);
   tokenFile.print('\n');
   tokenFile.close();
+  return true;
 }
 
 bool encode_assist_request(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
@@ -94,14 +96,8 @@ bool encode_assist_request(pb_ostream_t *stream, const pb_field_t *field, void *
   return pb_encode_submessage(stream, google_assistant_embedded_v1alpha2_AssistRequest_fields, assist_request);
 }
 
-// Encode the given command as the appropriate protobuf and write it to /request.pb.
-bool update_command(const char *command) {
-  File file = SPIFFS.open("/request.pb", "w");
-  if (!file) {
-    Serial.print("Failed to open /request.pb for writing.");
-    return false;
-  }
-
+// Encode the given command as the appropriate protobuf message and write it to the given Print stream.
+bool encode_request(const char *command, pb_ostream_t pb_out) {
   google_assistant_embedded_v1alpha2_AssistRequest assist_request = google_assistant_embedded_v1alpha2_AssistRequest_init_default;
   assist_request.config.audio_out_config.encoding = google_assistant_embedded_v1alpha2_AudioOutConfig_Encoding_MP3;
   assist_request.config.audio_out_config.sample_rate_hertz = 16000;
@@ -116,30 +112,43 @@ bool update_command(const char *command) {
   google_rpc_StreamBody stream_body = google_rpc_StreamBody_init_default;
   stream_body.message.funcs.encode = encode_assist_request;
   stream_body.message.arg = &assist_request;
-  pb_ostream_s pb_out = as_pb_ostream(file);
   if (!pb_encode(&pb_out, google_rpc_StreamBody_fields, &stream_body)) {
     Serial.print("Failed encoding StreamBody: ");
     Serial.println(PB_GET_ERROR(&pb_out));
-    file.close();
     return false;
   }
-  Serial.print("Updated command to \"");
-  Serial.print(command);
-  Serial.println("\"");
 
-  file.close();
   return true;
 }
 
-String load_token() {
-  File tokenFile = SPIFFS.open("/token.txt", "r");
-  if (!tokenFile) {
-    Serial.println("Failed to open /token.txt for reading.");
+// Encode the given command as the appropriate protobuf and write it to /request.pb.
+bool update_command(const char *command) {
+  Serial.print("Updating command to \"");
+  Serial.print(command);
+  Serial.println("\"");
+
+  return store_token("/command.txt", command);
+}
+
+String read_line_from_file(const char *filename) {
+  File file = SPIFFS.open(filename, "r");
+  if (!file) {
+    Serial.print("Failed to open ");
+    Serial.print(file);
+    Serial.println(" for reading.");
     return String();
   }
-  String token = tokenFile.readStringUntil('\n');
-  tokenFile.close();
+  String token = file.readStringUntil('\n');
+  file.close();
   return token;
+}
+
+String load_token() {
+  return read_line_from_file("/token.txt");
+}
+
+String load_command() {
+  return read_line_from_file("command.txt");
 }
 
 // Given an OAuth code, get a new token and refresh token and store them.
@@ -314,10 +323,8 @@ bool wifi_setup() {
 // Return true on success, false on failure for any reason.
 bool send_assistant_request() {
   String token = load_token();
-  File requestFile = SPIFFS.open("/request.pb", "r");
-  if (!requestFile) {
-    Serial.println("failed to read /request.pb");
-    SPIFFS.end();
+  String command = load_command();
+  if (token.length() == 0 || command.length() == 0) {
     return false;
   }
 
@@ -340,16 +347,26 @@ bool send_assistant_request() {
   Serial.print("requesting path: ");
   Serial.println(path);
 
+  pb_byte_t request_buffer[REQUEST_BUFFER_SIZE];
+  pb_ostream_t request_buffer_stream = pb_ostream_from_buffer(request_buffer, REQUEST_BUFFER_SIZE);
+  encode_request(command.c_str(), request_buffer_stream);
+
   client.print(String("POST ") + path + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
                "User-Agent: BuildFailureDetectorESP8266\r\n" +
                "Content-Type: application/x-protobuf\r\n" +
                "Authorization: Bearer " + token + "\r\n" +
-               "Content-Length: " + requestFile.size() + "\r\n" +
+               "Content-Length: " + request_buffer_stream.bytes_written + "\r\n" +
                "Connection: close\r\n\r\n");
 
   Serial.println("headers sent");
-  copyStreamToPrint(requestFile, client);
+  size_t bytes_sent = client.write(request_buffer, request_buffer_stream.bytes_written);
+  if (bytes_sent != request_buffer_stream.bytes_written) {
+    Serial.print("Tried to send ");
+    Serial.print(request_buffer_stream.bytes_written);
+    Serial.print(" bytes of request to server but only sent ");
+    Serial.println(bytes_sent);
+  }
   Serial.println("body sent");
   unsigned long sent_request_time = millis();
 
@@ -431,7 +448,7 @@ void handle_root() {
     "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update WiFi config\"/>" +
     "</form><form method=\"post\" action=\"/\">" +
-    "Command: <input type=\"text\" name=\"command\">" +
+    "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">" +
     "<input type=\"submit\" value=\"Update command\"/>" +
      "</form></body></html>");
 }
