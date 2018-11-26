@@ -97,7 +97,7 @@ bool encode_assist_request(pb_ostream_t *stream, const pb_field_t *field, void *
 }
 
 // Encode the given command as the appropriate protobuf message and write it to the given Print stream.
-bool encode_request(const char *command, pb_ostream_t pb_out) {
+bool encode_request(const char *command, pb_ostream_t *pb_out) {
   google_assistant_embedded_v1alpha2_AssistRequest assist_request = google_assistant_embedded_v1alpha2_AssistRequest_init_default;
   assist_request.config.audio_out_config.encoding = google_assistant_embedded_v1alpha2_AudioOutConfig_Encoding_MP3;
   assist_request.config.audio_out_config.sample_rate_hertz = 16000;
@@ -112,9 +112,9 @@ bool encode_request(const char *command, pb_ostream_t pb_out) {
   google_rpc_StreamBody stream_body = google_rpc_StreamBody_init_default;
   stream_body.message.funcs.encode = encode_assist_request;
   stream_body.message.arg = &assist_request;
-  if (!pb_encode(&pb_out, google_rpc_StreamBody_fields, &stream_body)) {
+  if (!pb_encode(pb_out, google_rpc_StreamBody_fields, &stream_body)) {
     Serial.print("Failed encoding StreamBody: ");
-    Serial.println(PB_GET_ERROR(&pb_out));
+    Serial.println(PB_GET_ERROR(pb_out));
     return false;
   }
 
@@ -148,7 +148,7 @@ String load_token() {
 }
 
 String load_command() {
-  return read_line_from_file("command.txt");
+  return read_line_from_file("/command.txt");
 }
 
 // Given an OAuth code, get a new token and refresh token and store them.
@@ -328,6 +328,13 @@ bool send_assistant_request() {
     return false;
   }
 
+  pb_byte_t request_buffer[REQUEST_BUFFER_SIZE];
+  pb_ostream_t request_buffer_stream = pb_ostream_from_buffer(request_buffer, REQUEST_BUFFER_SIZE);
+  if (!encode_request(command.c_str(), &request_buffer_stream)) {
+    Serial.println("Failed to encode request.");
+    return false;
+  }
+
   // Use WiFiClientSecure class to create TLS connection
   WiFiClientSecure client;
   Serial.print("connecting to ");
@@ -346,10 +353,6 @@ bool send_assistant_request() {
   String path = "/$rpc/google.assistant.embedded.v1alpha2.EmbeddedAssistant/Assist";
   Serial.print("requesting path: ");
   Serial.println(path);
-
-  pb_byte_t request_buffer[REQUEST_BUFFER_SIZE];
-  pb_ostream_t request_buffer_stream = pb_ostream_from_buffer(request_buffer, REQUEST_BUFFER_SIZE);
-  encode_request(command.c_str(), request_buffer_stream);
 
   client.print(String("POST ") + path + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
