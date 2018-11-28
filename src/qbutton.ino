@@ -47,6 +47,15 @@ const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99
 #define DRD_TIMEOUT 0.5
 #define DRD_ADDRESS 0x00
 
+// Change this to disable logging
+#if 1
+#define LOG(x) Serial.print(x)
+#define LOGLN(x) Serial.println(x)
+#else
+#define LOG(x)
+#define LOGLN(x)
+#endif
+
 ESP8266WebServer server(80);
 DoubleResetDetect drd(DRD_TIMEOUT, DRD_ADDRESS);
 
@@ -69,16 +78,16 @@ void copyStreamToPrint(Stream &from, Print &to) {
 void print_response(WiFiClientSecure &client) {
   while (client.connected()) {
     String line = client.readStringUntil('\n');
-    Serial.println(line);
+    LOGLN(line);
   }
 }
 
 bool store_token(const char *path, const char *token) {
   File tokenFile = SPIFFS.open(path, "w");
   if (!tokenFile) {
-    Serial.print("Failed to open ");
-    Serial.print(path);
-    Serial.println(" for writing.");
+    LOG("Failed to open ");
+    LOG(path);
+    LOGLN(" for writing.");
     return false;
   }
   // Don't use println, because it adds '\r' characters which we don't want.
@@ -113,8 +122,8 @@ bool encode_request(const char *command, pb_ostream_t *pb_out) {
   stream_body.message.funcs.encode = encode_assist_request;
   stream_body.message.arg = &assist_request;
   if (!pb_encode(pb_out, google_rpc_StreamBody_fields, &stream_body)) {
-    Serial.print("Failed encoding StreamBody: ");
-    Serial.println(PB_GET_ERROR(pb_out));
+    LOG("Failed encoding StreamBody: ");
+    LOGLN(PB_GET_ERROR(pb_out));
     return false;
   }
 
@@ -123,9 +132,9 @@ bool encode_request(const char *command, pb_ostream_t *pb_out) {
 
 // Encode the given command as the appropriate protobuf and write it to /request.pb.
 bool update_command(const char *command) {
-  Serial.print("Updating command to \"");
-  Serial.print(command);
-  Serial.println("\"");
+  LOG("Updating command to \"");
+  LOG(command);
+  LOGLN("\"");
 
   return store_token("/command.txt", command);
 }
@@ -133,9 +142,9 @@ bool update_command(const char *command) {
 String read_line_from_file(const char *filename) {
   File file = SPIFFS.open(filename, "r");
   if (!file) {
-    Serial.print("Failed to open ");
-    Serial.print(file);
-    Serial.println(" for reading.");
+    LOG("Failed to open ");
+    LOG(file);
+    LOGLN(" for reading.");
     return String();
   }
   String token = file.readStringUntil('\n');
@@ -155,14 +164,14 @@ String load_command() {
 bool oauth_with_code(const String &code) {
   WiFiClientSecure client;
   if (!client.connect(oauth_host, httpsPort)) {
-    Serial.println("connection failed");
+    LOGLN("connection failed");
     return false;
   }
 
   if (client.verify(fingerprint, oauth_host)) {
-    Serial.println("certificate matches");
+    LOGLN("certificate matches");
   } else {
-    Serial.println("certificate doesn't match");
+    LOGLN("certificate doesn't match");
   }
 
   String body = String("client_id=") + client_id + "&" +
@@ -180,7 +189,7 @@ bool oauth_with_code(const String &code) {
   // Check status
   String line = client.readStringUntil('\n');
   if (!line.startsWith("HTTP/1.1 200 OK")) {
-    Serial.println(line);
+    LOGLN(line);
     print_response(client);
     client.stop();
     return false;
@@ -192,13 +201,13 @@ bool oauth_with_code(const String &code) {
   DynamicJsonBuffer jb;
   JsonObject &root = jb.parseObject(client);
   if (!root.success()) {
-    Serial.println("Failed to parse JSON response from OAuth");
+    LOGLN("Failed to parse JSON response from OAuth");
     return false;
   }
   const char *token = root["access_token"];
   const char *refresh_token = root["refresh_token"];
-  Serial.print("got new access token ");
-  Serial.println(token);
+  LOG("got new access token ");
+  LOGLN(token);
   store_token("/refresh_token.txt", refresh_token);
   store_token("/token.txt", token);
   client.stop();
@@ -210,19 +219,19 @@ bool oauth_with_code(const String &code) {
 bool refresh_oauth() {
   WiFiClientSecure client;
   if (!client.connect(oauth_host, httpsPort)) {
-    Serial.println("connection failed");
+    LOGLN("connection failed");
     return false;
   }
 
   if (client.verify(fingerprint, oauth_host)) {
-    Serial.println("certificate matches");
+    LOGLN("certificate matches");
   } else {
-    Serial.println("certificate doesn't match");
+    LOGLN("certificate doesn't match");
   }
 
   File refreshTokenFile = SPIFFS.open("/refresh_token.txt", "r");
   if (!refreshTokenFile) {
-    Serial.println("failed to read /refresh_token.txt");
+    LOGLN("failed to read /refresh_token.txt");
     return false;
   }
 
@@ -242,7 +251,7 @@ bool refresh_oauth() {
   // Check status
   String line = client.readStringUntil('\n');
   if (!line.startsWith("HTTP/1.1 200 OK")) {
-    Serial.println(line);
+    LOGLN(line);
     print_response(client);
     client.stop();
     return false;
@@ -254,12 +263,12 @@ bool refresh_oauth() {
   DynamicJsonBuffer jb;
   JsonObject &root = jb.parseObject(client);
   if (!root.success()) {
-    Serial.println("Failed to parse JSON response from OAuth refresh");
+    LOGLN("Failed to parse JSON response from OAuth refresh");
     return false;
   }
   const char *token = root["access_token"];
-  Serial.print("got new access token ");
-  Serial.println(token);
+  LOG("got new access token ");
+  LOGLN(token);
   store_token("/token.txt", token);
   client.stop();
   return true;
@@ -269,34 +278,34 @@ bool wifi_connect() {
   // Read SSID and password from file.
   File wifiFile = SPIFFS.open("/wifi.txt", "r");
   if (!wifiFile) {
-    Serial.println("Failed to open /wifi.txt for reading.");
+    LOGLN("Failed to open /wifi.txt for reading.");
     return false;
   }
   String ssid = wifiFile.readStringUntil('\n');
   String password = wifiFile.readStringUntil('\n');
   wifiFile.close();
 
-  Serial.print("connecting to '");
-  Serial.print(ssid.c_str());
-  Serial.print("' with password '");
-  Serial.print(password.c_str());
-  Serial.println("'");
+  LOG("connecting to '");
+  LOG(ssid.c_str());
+  LOG("' with password '");
+  LOG(password.c_str());
+  LOGLN("'");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
   //WiFi.begin(ssid, password);
   // Try to connect for 5 seconds
   for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i) {
     delay(500);
-    Serial.print(".");
+    LOG(".");
   }
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Couldn't connect");
+    LOGLN("Couldn't connect");
     return false;
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  LOGLN("");
+  LOGLN("WiFi connected");
+  LOGLN("IP address: ");
+  LOGLN(WiFi.localIP());
 
   return true;
 }
@@ -314,8 +323,8 @@ bool wifi_setup() {
   IPAddress subnet(255, 255, 255, 0);
   WiFi.softAPConfig(local_ip, gateway, subnet);
   WiFi.softAP("qButton");
-  Serial.println("Running AP qButton. Local IP address:");
-  Serial.println(WiFi.softAPIP());
+  LOGLN("Running AP qButton. Local IP address:");
+  LOGLN(WiFi.softAPIP());
 
   return false;
 }
@@ -331,28 +340,28 @@ bool send_assistant_request() {
   pb_byte_t request_buffer[REQUEST_BUFFER_SIZE];
   pb_ostream_t request_buffer_stream = pb_ostream_from_buffer(request_buffer, REQUEST_BUFFER_SIZE);
   if (!encode_request(command.c_str(), &request_buffer_stream)) {
-    Serial.println("Failed to encode request.");
+    LOGLN("Failed to encode request.");
     return false;
   }
 
   // Use WiFiClientSecure class to create TLS connection
   WiFiClientSecure client;
-  Serial.print("connecting to ");
-  Serial.println(host);
+  LOG("connecting to ");
+  LOGLN(host);
   if (!client.connect(host, httpsPort)) {
-    Serial.println("connection failed");
+    LOGLN("connection failed");
     return false;
   }
 
   if (client.verify(fingerprint, host)) {
-    Serial.println("certificate matches");
+    LOGLN("certificate matches");
   } else {
-    Serial.println("certificate doesn't match");
+    LOGLN("certificate doesn't match");
   }
 
   String path = "/$rpc/google.assistant.embedded.v1alpha2.EmbeddedAssistant/Assist";
-  Serial.print("requesting path: ");
-  Serial.println(path);
+  LOG("requesting path: ");
+  LOGLN(path);
 
   client.print(String("POST ") + path + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
@@ -362,29 +371,29 @@ bool send_assistant_request() {
                "Content-Length: " + request_buffer_stream.bytes_written + "\r\n" +
                "Connection: close\r\n\r\n");
 
-  Serial.println("headers sent");
+  LOGLN("headers sent");
   size_t bytes_sent = client.write(request_buffer, request_buffer_stream.bytes_written);
   if (bytes_sent != request_buffer_stream.bytes_written) {
-    Serial.print("Tried to send ");
-    Serial.print(request_buffer_stream.bytes_written);
-    Serial.print(" bytes of request to server but only sent ");
-    Serial.println(bytes_sent);
+    LOG("Tried to send ");
+    LOG(request_buffer_stream.bytes_written);
+    LOG(" bytes of request to server but only sent ");
+    LOGLN(bytes_sent);
   }
-  Serial.println("body sent");
+  LOGLN("body sent");
   unsigned long sent_request_time = millis();
 
   // Check status
   String line = client.readStringUntil('\n');
   if (!line.startsWith("HTTP/1.1 200 OK")) {
-    Serial.println(line);
+    LOGLN(line);
     print_response(client);
     client.stop();
     return false;
   }
 
-  Serial.print("success after ");
-  Serial.print(millis() - sent_request_time);
-  Serial.println(" ms");
+  LOG("success after ");
+  LOG(millis() - sent_request_time);
+  LOGLN(" ms");
   client.stop();
   return true;
 }
@@ -394,7 +403,7 @@ void auth_and_send_request() {
   if (send_assistant_request()) {
     return;
   }
-  Serial.println("First request failed, refreshing token");
+  LOGLN("First request failed, refreshing token");
   if (!refresh_oauth()) {
     return;
   }
@@ -413,7 +422,7 @@ void handle_root() {
   if (new_ssid.length() > 0) {
     File wifiFile = SPIFFS.open("/wifi.txt", "w");
     if (!wifiFile) {
-      Serial.println("Failed to open /wifi.txt for writing.");
+      LOGLN("Failed to open /wifi.txt for writing.");
       server.send(500, "text/plain", "Failed to open /wifi.txt for writing");
       return;
     }
@@ -423,8 +432,8 @@ void handle_root() {
     wifiFile.print(new_password);
     wifiFile.print('\n');
     wifiFile.close();
-    Serial.println("wrote new SSID and password");
-    Serial.println(new_ssid);
+    LOGLN("wrote new SSID and password");
+    LOGLN(new_ssid);
   }
   if (new_command.length() > 0) {
     update_command(new_command.c_str());
@@ -435,7 +444,7 @@ void handle_root() {
   String ssid, password;
   File wifiFile = SPIFFS.open("/wifi.txt", "r");
   if (!wifiFile) {
-    Serial.println("Failed to open /wifi.txt for reading.");
+    LOGLN("Failed to open /wifi.txt for reading.");
   } else {
     ssid = wifiFile.readStringUntil('\n');
     password = wifiFile.readStringUntil('\n');
@@ -476,7 +485,7 @@ void start_webserver() {
   server.on("/", handle_root);
   server.on("/oauth", handle_oauth);
   server.begin();
-  Serial.println("HTTP server started");
+  LOGLN("HTTP server started");
 }
 
 //////////////////
@@ -496,7 +505,7 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   if (double_reset) {
-    Serial.println("detected double reset");
+    LOGLN("detected double reset");
   }
 
   SPIFFS.begin();
@@ -509,20 +518,20 @@ void setup() {
     if (!double_reset) {
       // Go to sleep and/or turn off.
       SPIFFS.end();
-      Serial.println("sleeping");
+      LOGLN("sleeping");
       // Power can go off, if we're wired up that way.
       digitalWrite(EN_PIN, LOW);
       // Deep sleep until RESET is taken low.
       ESP.deepSleep(0);
 
-      Serial.println("done sleeping");
+      LOGLN("done sleeping");
       digitalWrite(EN_PIN, HIGH);
       SPIFFS.begin();
     }
   }
 
   if (!MDNS.begin("qbutton")) {
-    Serial.println("Error starting mDNS");
+    LOGLN("Error starting mDNS");
   }
 
   start_webserver();
