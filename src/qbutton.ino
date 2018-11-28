@@ -52,8 +52,17 @@ const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99
 // Change this to disable logging
 #if NETWORK_LOGGING
 WiFiServer log_server(2222);
-#define LOG(x) log_server.print(x)
-#define LOGLN(x) log_server.println(x)
+WiFiClient log_client;
+
+WiFiClient get_log_client() {
+  if (log_client.status() == CLOSED) {
+    log_client = log_server.available();
+  }
+  return log_client;
+}
+
+#define LOG(x) get_log_client().print(x)
+#define LOGLN(x) get_log_client().println(x)
 #elif 1
 #define LOG(x) Serial.print(x)
 #define LOGLN(x) Serial.println(x)
