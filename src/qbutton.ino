@@ -47,8 +47,14 @@ const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99
 #define DRD_TIMEOUT 0.5
 #define DRD_ADDRESS 0x00
 
+#define NETWORK_LOGGING 0
+
 // Change this to disable logging
-#if 1
+#if NETWORK_LOGGING
+WiFiServer log_server(2222);
+#define LOG(x) log_server.print(x)
+#define LOGLN(x) log_server.println(x)
+#elif 1
 #define LOG(x) Serial.print(x)
 #define LOGLN(x) Serial.println(x)
 #else
@@ -314,6 +320,11 @@ bool wifi_connect() {
 // Returns false if it was unable to connect to the configured network and so is in AP mode.
 bool wifi_setup() {
   if (wifi_connect()) {
+    #if NETWORK_LOGGING
+    log_server.begin();
+    log_server.setNoDelay(true);
+    #endif
+
     return true;
   }
 
@@ -323,6 +334,12 @@ bool wifi_setup() {
   IPAddress subnet(255, 255, 255, 0);
   WiFi.softAPConfig(local_ip, gateway, subnet);
   WiFi.softAP("qButton");
+
+  #if NETWORK_LOGGING
+  log_server.begin();
+  log_server.setNoDelay(true);
+  #endif
+
   LOGLN("Running AP qButton. Local IP address:");
   LOGLN(WiFi.softAPIP());
 
