@@ -80,7 +80,7 @@ void copyStreamToPrint(Stream &from, Print &to) {
   }
 }
 
-// Read all remaining response from a client, printing it to Serial for debugging.
+// Read all remaining response from a client, printing it to the log for debugging.
 void print_response(WiFiClientSecure &client) {
   while (client.connected()) {
     String line = client.readStringUntil('\n');
