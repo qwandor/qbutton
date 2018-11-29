@@ -447,12 +447,12 @@ void handle_root() {
   const String &new_ssid = server.arg("ssid");
   const String &new_password = server.arg("password");
   const String &new_command = server.arg("command");
+  String error;
   if (new_ssid.length() > 0) {
     File wifiFile = SPIFFS.open("/wifi.txt", "w");
     if (!wifiFile) {
       LOGLN("Failed to open /wifi.txt for writing.");
-      server.send(500, "text/plain", "Failed to open /wifi.txt for writing");
-      return;
+      error = "Failed to open /wifi.txt for writing";
     }
     // Don't use println, because it adds '\r' characters which we don't want.
     wifiFile.print(new_ssid);
@@ -480,6 +480,7 @@ void handle_root() {
   }
 
   server.send(200, "text/html", String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
+    "<p style=\"color: red;\">" + error + "</p>" +
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
     WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
