@@ -84,9 +84,12 @@ void handle_root() {
       button_commands.remove(i);
       updated_commands = true;
       break;
-    } else if (server.hasArg(String("command") + i)) {
+    } else if (server.hasArg("update") && server.hasArg(String("command") + i)) {
       button_commands[i].command = server.arg(String("command") + i);
       updated_commands = true;
+    } else if (server.hasArg(String("test") + i)) {
+      // Test running the command
+      auth_and_send_request(button_commands[i].command);
     }
   }
   if (updated_commands) {
@@ -134,10 +137,11 @@ void handle_root() {
   for (uint i = 0; i < button_commands.size(); ++i) {
     page = page + "<li>" + button_commands[i].code.to_hex() +
       "<input type=\"text\" name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>" +
-      "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/></li>";
+      "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/>" +
+      "<input type=\"submit\" name=\"test" + i + "\" value=\"Test command\"/></li>";
   }
   page = page + "</ul>" +
-     "<input type=\"submit\" value=\"Update commands\"/></form>";
+     "<input type=\"submit\" name=\"update\" value=\"Update commands\"/></form>";
   if (button_commands.size() < MAX_COMMANDS) {
     page += "<form method=\"post\" action=\"/\"><input type=\"text\" name=\"new_command\"/><input type=\"submit\" value=\"Add command\"/></form>";
   }
