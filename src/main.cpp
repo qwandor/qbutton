@@ -31,8 +31,7 @@ limitations under the License.
 //////////////////
 
 void setup() {
-  Serial.begin(9200);
-  Serial.println();
+  Serial.begin(19200);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 

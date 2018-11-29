@@ -16,7 +16,7 @@ limitations under the License.
 
 #pragma once
 
-#define LED_PIN 2
+#define LED_PIN 13
 
 #define REQUEST_BUFFER_SIZE 200
 #define MAX_COMMANDS 20
