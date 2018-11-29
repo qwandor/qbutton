@@ -19,7 +19,9 @@ limitations under the License.
 #include "assistant.h"
 #include "config.h"
 #include "logging.h"
+#include "rf.h"
 #include "streamutils.h"
+#include "ButtonCommand.h"
 
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
@@ -28,43 +30,6 @@ limitations under the License.
 
 static ESP8266WebServer server(80);
 static String admin_password;
-String storage_array[MAX_COMMANDS];
-Vector<String> button_commands(storage_array);
-
-// Save all commands to a file.
-bool save_commands() {
-  File file = SPIFFS.open("/commands.txt", "w");
-  if (!file) {
-    LOGLN("Failed to open /commands.txt for writing.");
-    return false;
-  }
-  for (uint i = 0; i < button_commands.size(); ++i) {
-    // Don't use println, because it adds '\r' characters which we don't want.
-    file.print(button_commands[i]);
-    file.print('\n');
-  }
-  file.close();
-  return true;
-}
-
-bool load_commands() {
-  File file = SPIFFS.open("/commands.txt", "r");
-  if (!file) {
-    LOGLN("Failed to open /commands.txt for reading.");
-    return false;
-  }
-  button_commands.clear();
-  while (file.available() > 0) {
-    String command = file.readStringUntil('\n');
-    if (command.length() == 0) {
-      break;
-    }
-    button_commands.push_back(command);
-
-  }
-  file.close();
-  return true;
-}
 
 bool write_wifi_config(const String &ssid, const String &password) {
   File wifiFile = SPIFFS.open("/wifi.txt", "w");
@@ -120,7 +85,7 @@ void handle_root() {
       updated_commands = true;
       break;
     } else if (server.hasArg(String("command") + i)) {
-      button_commands[i] = server.arg(String("command") + i);
+      button_commands[i].command = server.arg(String("command") + i);
       updated_commands = true;
     }
   }
@@ -128,10 +93,14 @@ void handle_root() {
     save_commands();
   }
   if (new_command.length() > 0 && button_commands.size() < MAX_COMMANDS) {
-    // Add a new command
-    button_commands.push_back(new_command);
-    save_commands();
-    auth_and_send_request(new_command);
+    // Add a new command: first wait for the button to be pressed
+    RfCode code;
+    if (learn_code(&code)) {
+      button_commands.push_back(ButtonCommand(code, new_command));
+      save_commands();
+    } else {
+      error = "Failed to learn code.";
+    }
   }
 
   // Read whatever is on disk.
@@ -163,7 +132,9 @@ void handle_root() {
     "<input type=\"submit\" value=\"Update WiFi config\"/>" +
     "</form><h2>Commands</h2><form method=\"post\" action=\"/\"><ul>";
   for (uint i = 0; i < button_commands.size(); ++i) {
-    page = page + "<li><input type=\"text\" name=\"command" + i + "\" value=\"" + button_commands[i] + "\"/><input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/></li>";
+    page = page + "<li>" + button_commands[i].code.to_hex() +
+      "<input type=\"text\" name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>" +
+      "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/></li>";
   }
   page = page + "</ul>" +
      "<input type=\"submit\" value=\"Update commands\"/></form>";
@@ -191,7 +162,6 @@ void handle_oauth() {
 
 // Run web server to let the user authenticate their account.
 void start_webserver() {
-  load_commands();
   admin_password = read_line_from_file("/password.txt");
 
   server.on("/", handle_root);

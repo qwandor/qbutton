@@ -17,6 +17,7 @@ limitations under the License.
 #include "assistant.h"
 #include "config.h"
 #include "logging.h"
+#include "rf.h"
 #include "streamutils.h"
 #include "webserver.h"
 #include "wifi.h"
@@ -43,6 +44,7 @@ void setup() {
     LOGLN("Error starting mDNS");
   }
 
+  load_commands();
   start_webserver();
   #if OTA_UPDATE
   ArduinoOTA.setHostname(MDNS_HOSTNAME);
@@ -55,4 +57,9 @@ void loop() {
   #if OTA_UPDATE
   ArduinoOTA.handle();
   #endif
+
+  size_t available = Serial.available();
+  if (available >= 3) {
+    handle_message();
+  }
 }
