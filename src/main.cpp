@@ -38,7 +38,10 @@ void setup() {
 
   SPIFFS.begin();
 
-  wifi_setup();
+  if (wifi_setup()) {
+    // Turn off the LED if we have successfully connected to WiFi
+    digitalWrite(LED_PIN, HIGH);
+  }
 
   if (!MDNS.begin(MDNS_HOSTNAME)) {
     LOGLN("Error starting mDNS");
