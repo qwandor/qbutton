@@ -119,6 +119,7 @@ bool learn_code(RfCode *code) {
 void handle_button(const RfCode &code) {
   LOG("Got code ");
   LOGLN(code.to_hex());
+  digitalWrite(LED_PIN, LOW);
 
   // Find any matching commands and run them.
   for (size_t i = 0; i < button_commands.size(); ++i) {
@@ -128,6 +129,8 @@ void handle_button(const RfCode &code) {
       auth_and_send_request(button_commands[i].command);
     }
   }
+
+  digitalWrite(LED_PIN, HIGH);
 }
 
 void handle_message() {
