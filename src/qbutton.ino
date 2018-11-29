@@ -412,7 +412,6 @@ bool send_assistant_request() {
   String line = client.readStringUntil('\n');
   if (!line.startsWith("HTTP/1.1 200 OK")) {
     LOGLN(line);
-    print_response(client);
     client.stop();
     return false;
   }
