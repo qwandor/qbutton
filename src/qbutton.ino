@@ -62,12 +62,15 @@ WiFiClient get_log_client() {
 }
 
 #define LOG(x) get_log_client().print(x)
+#define LOGH(x) get_log_client().print(x, HEX)
 #define LOGLN(x) get_log_client().println(x)
 #elif 1
 #define LOG(x) Serial.print(x)
+#define LOGH(x, y) Serial.print(x, HEX)
 #define LOGLN(x) Serial.println(x)
 #else
 #define LOG(x)
+#define LOGH(x)
 #define LOGLN(x)
 #endif
 
