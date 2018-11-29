@@ -23,7 +23,7 @@ limitations under the License.
 
 // Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
 #define NETWORK_LOGGING 0
-#define SERIAL_LOGGING 1
+#define SERIAL_LOGGING 0
 #define OTA_UPDATE 0
 
 #define MDNS_HOSTNAME "qbutton"
