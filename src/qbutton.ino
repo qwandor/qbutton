@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 #include <ArduinoJson.h>
+#include <ArduinoOTA.h>
 #include <DoubleResetDetect.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
@@ -48,6 +49,7 @@ const char* fingerprint = "25 94 76 8C E2 3C 5C 74 08 A1 1F B5 F2 09 B8 19 B3 99
 #define DRD_ADDRESS 0x00
 
 #define NETWORK_LOGGING 0
+#define OTA_UPDATE 0
 
 // Change this to disable logging
 #if NETWORK_LOGGING
@@ -566,8 +568,14 @@ void setup() {
   }
 
   start_webserver();
+  #if OTA_UPDATE
+  ArduinoOTA.begin();
+  #endif
 }
 
 void loop() {
   server.handleClient();
+  #if OTA_UPDATE
+  ArduinoOTA.handle();
+  #endif
 }
