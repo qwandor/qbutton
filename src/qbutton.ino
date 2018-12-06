@@ -36,6 +36,8 @@ const char *oauth_host = "www.googleapis.com";
 const char *host = "embeddedassistant.googleapis.com";
 const int httpsPort = 443;
 const char *hostname = "qbutton";
+const char *admin_username = "admin";
+const char *admin_realm = "admin@qbutton";
 
 const char *client_id = "";
 const char *client_secret = "";
@@ -79,6 +81,7 @@ WiFiClient get_log_client() {
 
 ESP8266WebServer server(80);
 DoubleResetDetect drd(DRD_TIMEOUT, DRD_ADDRESS);
+String admin_password;
 
 // Copy from a char * to a char[n] buffer without overrunning the buffer, making sure to end with a \0.
 #define safe_copy(src, dest) snprintf((dest), sizeof(dest), "%s", (src))
@@ -445,11 +448,25 @@ void auth_and_send_request() {
 ///////////////////////////
 
 void handle_root() {
+  if (admin_password.length() > 0 && !server.authenticate(admin_username, admin_password.c_str())) {
+    server.requestAuthentication(DIGEST_AUTH, admin_realm);
+    return;
+  }
+
   // If a new SSID and password have been sent, save them.
+  const String &new_admin_password = server.arg("admin_password");
   const String &new_ssid = server.arg("ssid");
   const String &new_password = server.arg("password");
   const String &new_command = server.arg("command");
   String error;
+  if (new_admin_password.length() > 0) {
+    if (store_token("/password.txt", new_admin_password.c_str())) {
+      admin_password = new_admin_password;
+    } else {
+      LOGLN("Failed to save new admin password.");
+      error = "Failed to save new admin password.";
+    }
+  }
   if (new_ssid.length() > 0) {
     File wifiFile = SPIFFS.open("/wifi.txt", "w");
     if (!wifiFile) {
@@ -483,6 +500,11 @@ void handle_root() {
 
   server.send(200, "text/html", String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
+    "<h2>Admin password</h2>" +
+    "<form method=\"post\" action=\"/\">" +
+    "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
+    "<input type=\"submit\" value=\"Update admin password\"/>" +
+    "</form>" +
     "<h2>Google account</h2>" +
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
@@ -566,6 +588,8 @@ void setup() {
   if (!MDNS.begin(hostname)) {
     LOGLN("Error starting mDNS");
   }
+
+  admin_password = read_line_from_file("/password.txt");
 
   start_webserver();
   #if OTA_UPDATE
