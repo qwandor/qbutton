@@ -452,7 +452,7 @@ void handle_root() {
     File wifiFile = SPIFFS.open("/wifi.txt", "w");
     if (!wifiFile) {
       LOGLN("Failed to open /wifi.txt for writing.");
-      error = "Failed to open /wifi.txt for writing";
+      error = "Failed to open /wifi.txt for writing.";
     }
     // Don't use println, because it adds '\r' characters which we don't want.
     wifiFile.print(new_ssid);
