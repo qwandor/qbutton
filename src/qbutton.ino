@@ -312,7 +312,6 @@ bool wifi_connect() {
   LOGLN("'");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
-  //WiFi.begin(ssid, password);
   // Try to connect for 5 seconds
   for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i) {
     delay(500);
