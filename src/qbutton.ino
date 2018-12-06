@@ -32,7 +32,7 @@ limitations under the License.
 #define REQUEST_BUFFER_SIZE 200
 
 const char *oauth_host = "www.googleapis.com";
-const char* host = "embeddedassistant.googleapis.com";
+const char *host = "embeddedassistant.googleapis.com";
 const int httpsPort = 443;
 
 const char *client_id = "";
