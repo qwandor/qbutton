@@ -35,6 +35,7 @@ limitations under the License.
 const char *oauth_host = "www.googleapis.com";
 const char *host = "embeddedassistant.googleapis.com";
 const int httpsPort = 443;
+const char *hostname = "qbutton";
 
 const char *client_id = "";
 const char *client_secret = "";
@@ -562,13 +563,13 @@ void setup() {
     }
   }
 
-  if (!MDNS.begin("qbutton")) {
+  if (!MDNS.begin(hostname)) {
     LOGLN("Error starting mDNS");
   }
 
   start_webserver();
   #if OTA_UPDATE
-  ArduinoOTA.setHostname("qbutton");
+  ArduinoOTA.setHostname(hostname);
   ArduinoOTA.begin();
   #endif
 }
