@@ -568,6 +568,7 @@ void setup() {
 
   start_webserver();
   #if OTA_UPDATE
+  ArduinoOTA.setHostname("qbutton");
   ArduinoOTA.begin();
   #endif
 }
