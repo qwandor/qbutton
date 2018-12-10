@@ -163,7 +163,7 @@ String read_line_from_file(const char *filename) {
   File file = SPIFFS.open(filename, "r");
   if (!file) {
     LOG("Failed to open ");
-    LOG(file);
+    LOG(filename);
     LOGLN(" for reading.");
     return String();
   }
