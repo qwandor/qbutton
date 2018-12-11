@@ -24,6 +24,7 @@ limitations under the License.
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <FS.h>
+#include <StreamString.h>
 #include <WebSocketsClient.h>
 
 const char *host = "iot.sinric.com";
@@ -78,6 +79,28 @@ void switch_switch(const String &device_id, bool state) {
   }
 }
 
+void set_power_state_on_server(String device_id, bool state) {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["deviceId"] = device_id;
+  root["action"] = "setPowerState";
+  root["value"] = state ? "ON" : "OFF";
+  StreamString databuf;
+  root.printTo(databuf);
+
+  websocket.sendTXT(databuf);
+  LOG("Sending state for ");
+  LOG(device_id);
+  LOG(": ");
+  LOGLN(state);
+}
+
+void send_switch_states() {
+  for (size_t i = 0; i < num_switches; ++i) {
+    set_power_state_on_server(switch_ids[i], digitalRead(switch_pins[i]) == LOW);
+  }
+}
+
 void websocket_event(WStype_t type, uint8_t *payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
@@ -85,9 +108,10 @@ void websocket_event(WStype_t type, uint8_t *payload, size_t length) {
       LOGLN("Websocket disconnected");
       break;
     case WStype_CONNECTED: {
-      websocket_connected = true;
-      LOG("Websocket connected: ");
-      LOGLN((const char *) payload);
+        websocket_connected = true;
+        LOG("Websocket connected: ");
+        LOGLN((const char *) payload);
+        send_switch_states();
       }
       break;
     case WStype_TEXT: {
