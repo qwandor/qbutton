@@ -97,7 +97,7 @@ void handle_root() {
     wifiFile.close();
   }
 
-  String page = String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
+  String page = String("<html><head><title>qSwitch config</title></head><body><h1>qSwitch config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
     "<h2>Admin password</h2>" +
     "<form method=\"post\" action=\"/\">" +
