@@ -16,9 +16,9 @@ limitations under the License.
 
 #include "webserver.h"
 
-#include "assistant.h"
 #include "config.h"
 #include "logging.h"
+#include "sinric.h"
 #include "streamutils.h"
 
 #include <Arduino.h>
@@ -27,19 +27,6 @@ limitations under the License.
 
 static ESP8266WebServer server(80);
 static String admin_password;
-
-// Write the given command to /command.txt.
-bool update_command(const char *command) {
-  LOG("Updating command to \"");
-  LOG(command);
-  LOGLN("\"");
-
-  return write_line_to_file("/command.txt", command);
-}
-
-String load_command() {
-  return read_line_from_file("/command.txt");
-}
 
 bool write_wifi_config(const String &ssid, const String &password) {
   File wifiFile = SPIFFS.open("/wifi.txt", "w");
@@ -72,7 +59,6 @@ void handle_root() {
   const String &new_admin_password = server.arg("admin_password");
   const String &new_ssid = server.arg("ssid");
   const String &new_password = server.arg("password");
-  const String &new_command = server.arg("command");
   String error;
   if (new_admin_password.length() > 0) {
     if (write_line_to_file("/password.txt", new_admin_password.c_str())) {
@@ -87,9 +73,17 @@ void handle_root() {
       error = "Failed to write WiFi config.";
     }
   }
-  if (new_command.length() > 0) {
-    update_command(new_command.c_str());
-    auth_and_send_request(new_command);
+
+  // Update switch IDs.
+  bool updated_switch_ids = false;
+  for (size_t i = 0; i < num_switches; ++i) {
+    if (server.hasArg("update") && server.hasArg(String("switch_id") + i)) {
+      switch_ids[i] = server.arg(String("switch_id") + i);
+      updated_switch_ids = true;
+    }
+  }
+  if (updated_switch_ids) {
+    save_switch_ids();
   }
 
   // Read whatever is on disk.
@@ -110,35 +104,20 @@ void handle_root() {
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update admin password\"/>" +
     "</form>" +
-    "<h2>Google account</h2>" +
-    "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
-    "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
-    WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
     "<h2>WiFi config</h2>" +
     "<form method=\"post\" action=\"/\">" +
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
     "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update WiFi config\"/>" +
-    "</form><form method=\"post\" action=\"/\">" +
-    "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">" +
-    "<input type=\"submit\" value=\"Update command\"/>" +
-     "</form></body></html>";
-  server.send(200, "text/html", page);
-}
-
-void handle_oauth() {
-  const String &code = server.arg("code");
-  if (code.length() > 0) {
-    bool success = oauth_with_code(code);
-    if (success) {
-      server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Success</p><a href=\"/\">Home</a></body></html>");
-    } else {
-      server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Failure</p><a href=\"/\">Home</a></body></html>");
-    }
-  } else {
-    server.send(200, "text/html", String("<html><head><title>Error</title></head><body><h1>Authentication error</h1><p>") +
-      server.arg("error") + "</p></body></html>");
+    "<input type=\"submit\" value=\"Update WiFi config\"/></form>" +
+    "<h2>Switch IDs</h2>" +
+    "<form method=\"post\" action=\"/\"><ul>";
+  for (size_t i = 0; i < num_switches; ++i) {
+    page = page + "<li>Pin " + switch_pins[i] +
+      "<input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/></li>";
   }
+  page += "<input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
+  page += "</body></html>";
+  server.send(200, "text/html", page);
 }
 
 // Run web server to let the user authenticate their account.
@@ -146,7 +125,6 @@ void start_webserver() {
   admin_password = read_line_from_file("/password.txt");
 
   server.on("/", handle_root);
-  server.on("/oauth", handle_oauth);
   server.begin();
   LOGLN("HTTP server started");
 }

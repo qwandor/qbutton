@@ -1,0 +1,141 @@
+/*
+Copyright 2018 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ */
+
+#include "webserver.h"
+
+#include "config.h"
+#include "logging.h"
+#include "sinric.h"
+#include "streamutils.h"
+
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <FS.h>
+#include <WebSocketsClient.h>
+
+const char *host = "iot.sinric.com";
+const char *api_key = "";
+ 
+const uint8_t switch_pins[] = {LED_PIN};
+const size_t num_switches = sizeof(switch_pins);
+String switch_ids[num_switches];
+
+WebSocketsClient websocket;
+bool websocket_connected = false;
+uint64_t heartbeat_timestamp = 0;
+
+bool load_switch_ids() {
+  File file = SPIFFS.open("/switch_ids.txt", "r");
+  if (!file) {
+    LOGLN("Failed to open /switch_ids.txt for reading.");
+    return false;
+  }
+  for (size_t i = 0; i < num_switches; ++i) {
+    switch_ids[i] = file.readStringUntil('\n');
+  }
+  file.close();
+  return true;
+}
+
+bool save_switch_ids() {
+  File file = SPIFFS.open("/switch_ids.txt", "w");
+  if (!file) {
+    LOGLN("Failed to open /switch_ids.txt for writing.");
+    return false;
+  }
+  for (size_t i = 0; i < num_switches; ++i) {
+    file.print(switch_ids[i]);
+    file.print('\n');
+  }
+  file.close();
+  return true;
+}
+
+void init_switches() {
+  for (size_t i = 0; i < num_switches; ++i) {
+    pinMode(switch_pins[i], OUTPUT);
+  }
+}
+
+void switch_switch(const String &device_id, bool state) {
+  for (size_t i = 0; i < num_switches; ++i) {
+    if (device_id == switch_ids[i]) {
+      digitalWrite(switch_pins[i], state ? LOW : HIGH);
+    }
+  }
+}
+
+void websocket_event(WStype_t type, uint8_t *payload, size_t length) {
+  switch(type) {
+    case WStype_DISCONNECTED:
+      websocket_connected = false;
+      LOGLN("Websocket disconnected");
+      break;
+    case WStype_CONNECTED: {
+      websocket_connected = true;
+      LOG("Websocket connected: ");
+      LOGLN((const char *) payload);
+      }
+      break;
+    case WStype_TEXT: {
+        LOG("Websocket got: ");
+        LOGLN((const char *) payload);
+
+        DynamicJsonBuffer json_buffer;
+        JsonObject& json = json_buffer.parseObject((char*)payload);
+        String device_id = json["deviceId"];
+        String action = json["action"];
+
+        if (action == "action.devices.commands.OnOff") {
+          String value = json["value"]["on"];
+          LOGLN(value);
+          switch_switch(device_id, value == "true");
+        } else if (action == "test") {
+          LOGLN("Websocket got test command");
+        }
+      }
+      break;
+    case WStype_BIN:
+      Serial.printf("Websocket got binary of length: %u\n", length);
+      break;
+  }
+}
+
+void sinric_setup() {
+  load_switch_ids();
+  init_switches();
+}
+
+void sinric_connect() {
+  websocket.begin(host, 80, "/");
+  websocket.onEvent(websocket_event);
+  websocket.setAuthorization("apikey", api_key);
+  websocket.setReconnectInterval(5000);
+}
+
+void sinric_loop() {
+  websocket.loop();
+
+  if (websocket_connected) {
+    uint64_t now = millis();
+
+    // Send heartbeat in order to avoid disconnections.
+    if ((now - heartbeat_timestamp) > HEARTBEAT_INTERVAL) {
+      heartbeat_timestamp = now;
+      websocket.sendTXT("H");
+    }
+  }
+}

@@ -16,20 +16,15 @@ limitations under the License.
 
 #pragma once
 
-// Pin which is connected via a resistor to CH_PD, to latch power on
-#define EN_PIN 4
 #define LED_PIN 2
 
-#define REQUEST_BUFFER_SIZE 200
-
-#define DRD_TIMEOUT 0.5
-#define DRD_ADDRESS 0x00
+#define HEARTBEAT_INTERVAL 300000 // 5 Minutes
 
 // Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
 #define NETWORK_LOGGING 0
 #define SERIAL_LOGGING 1
 #define OTA_UPDATE 0
 
-#define MDNS_HOSTNAME "qbutton"
+#define MDNS_HOSTNAME "qswitch"
 #define ADMIN_USERNAME "admin"
-#define ADMIN_REALM "admin@qbutton"
+#define ADMIN_REALM "admin@qswitch"

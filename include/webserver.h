@@ -20,4 +20,3 @@ limitations under the License.
 
 void start_webserver();
 void webserver_loop();
-String load_command();

@@ -18,7 +18,12 @@ limitations under the License.
 
 #include <Arduino.h>
 
-extern const char *client_id;
+extern const uint8_t switch_pins[];
+extern const size_t num_switches;
+extern String switch_ids[];
 
-void auth_and_send_request(const String &command);
-bool oauth_with_code(const String &code);
+bool save_switch_ids();
+
+void sinric_setup();
+void sinric_connect();
+void sinric_loop();
