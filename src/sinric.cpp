@@ -32,6 +32,7 @@ const uint8_t switch_pins[] = SWITCH_PINS;
 const size_t num_switches = sizeof(switch_pins);
 const char *const switch_names[num_switches] = SWITCH_NAMES;
 static const bool switch_inverted[num_switches] = SWITCH_INVERTED;
+static const bool switch_initial_state[num_switches] = SWITCH_INITIAL_STATE;
 
 String switch_ids[num_switches];
 static WebSocketsClient websocket;
@@ -68,6 +69,7 @@ bool save_switch_ids() {
 void init_switches() {
   for (size_t i = 0; i < num_switches; ++i) {
     pinMode(switch_pins[i], OUTPUT);
+    digitalWrite(switch_pins[i], switch_initial_state[i] ^ switch_inverted[i] ? HIGH : LOW);
   }
 }
 
