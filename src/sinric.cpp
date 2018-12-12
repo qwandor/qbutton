@@ -30,6 +30,7 @@ const char *api_key = "";
 
 const uint8_t switch_pins[] = SWITCH_PINS;
 const size_t num_switches = sizeof(switch_pins);
+const char *const switch_names[num_switches] = SWITCH_NAMES;
 
 String switch_ids[num_switches];
 static WebSocketsClient websocket;

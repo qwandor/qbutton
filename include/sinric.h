@@ -19,6 +19,7 @@ limitations under the License.
 #include <Arduino.h>
 
 extern const uint8_t switch_pins[];
+extern const char *const switch_names[];
 extern const size_t num_switches;
 extern String switch_ids[];
 

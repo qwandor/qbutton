@@ -112,8 +112,8 @@ void handle_root() {
     "<h2>Switch IDs</h2>" +
     "<form method=\"post\" action=\"/\"><ul>";
   for (size_t i = 0; i < num_switches; ++i) {
-    page = page + "<li>Pin " + switch_pins[i] +
-      "<input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/></li>";
+    page = page + "<li><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/> " +
+      switch_names[i] + " (pin" + switch_pins[i] + ")</li>";
   }
   page += "<input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
   page += "</body></html>";
