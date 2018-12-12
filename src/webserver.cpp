@@ -115,7 +115,7 @@ void handle_root() {
     page = page + "<li><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/> " +
       switch_names[i] + " (pin" + switch_pins[i] + ")</li>";
   }
-  page += "<input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
+  page += "</ul><input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
   page += "</body></html>";
   server.send(200, "text/html", page);
 }
