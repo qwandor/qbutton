@@ -31,6 +31,7 @@ const char *api_key = "";
 const uint8_t switch_pins[] = SWITCH_PINS;
 const size_t num_switches = sizeof(switch_pins);
 const char *const switch_names[num_switches] = SWITCH_NAMES;
+static const bool switch_inverted[num_switches] = SWITCH_INVERTED;
 
 String switch_ids[num_switches];
 static WebSocketsClient websocket;
@@ -73,7 +74,7 @@ void init_switches() {
 void switch_switch(const String &device_id, bool state) {
   for (size_t i = 0; i < num_switches; ++i) {
     if (device_id == switch_ids[i]) {
-      digitalWrite(switch_pins[i], state ? LOW : HIGH);
+      digitalWrite(switch_pins[i], state ^ switch_inverted[i] ? HIGH : LOW);
     }
   }
 }
@@ -96,7 +97,7 @@ void set_power_state_on_server(String device_id, bool state) {
 
 void send_switch_states() {
   for (size_t i = 0; i < num_switches; ++i) {
-    set_power_state_on_server(switch_ids[i], digitalRead(switch_pins[i]) == LOW);
+    set_power_state_on_server(switch_ids[i], (digitalRead(switch_pins[i]) == HIGH) ^ switch_inverted[i]);
   }
 }
 

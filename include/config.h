@@ -20,6 +20,7 @@ limitations under the License.
 
 #define SWITCH_PINS {LED_PIN, D5, D6, D7, D8}
 #define SWITCH_NAMES {"LED", "D5", "D6", "D7", "D8"}
+#define SWITCH_INVERTED {true, false, false, false, false}
 
 #define HEARTBEAT_INTERVAL 300000 // 5 Minutes
 
