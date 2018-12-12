@@ -18,7 +18,7 @@ limitations under the License.
 
 #define LED_PIN 2
 
-#define SWITCH_PINS {LED_PIN}
+#define SWITCH_PINS {LED_PIN, D1, D2, D3, D4}
 
 #define HEARTBEAT_INTERVAL 300000 // 5 Minutes
 
