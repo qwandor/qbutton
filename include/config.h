@@ -18,6 +18,8 @@ limitations under the License.
 
 #define LED_PIN 2
 
+#define SWITCH_PINS {LED_PIN}
+
 #define HEARTBEAT_INTERVAL 300000 // 5 Minutes
 
 // Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.

@@ -14,12 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-#include "webserver.h"
+#include "sinric.h"
 
 #include "config.h"
 #include "logging.h"
-#include "sinric.h"
-#include "streamutils.h"
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -29,14 +27,14 @@ limitations under the License.
 
 const char *host = "iot.sinric.com";
 const char *api_key = "";
- 
-const uint8_t switch_pins[] = {LED_PIN};
-const size_t num_switches = sizeof(switch_pins);
-String switch_ids[num_switches];
 
-WebSocketsClient websocket;
-bool websocket_connected = false;
-uint64_t heartbeat_timestamp = 0;
+const uint8_t switch_pins[] = SWITCH_PINS;
+const size_t num_switches = sizeof(switch_pins);
+
+String switch_ids[num_switches];
+static WebSocketsClient websocket;
+static bool websocket_connected = false;
+static uint64_t heartbeat_timestamp = 0;
 
 bool load_switch_ids() {
   File file = SPIFFS.open("/switch_ids.txt", "r");
