@@ -19,6 +19,7 @@ limitations under the License.
 #include "config.h"
 
 #include <WiFiClient.h>
+#include <WiFiServer.h>
 
 #if NETWORK_LOGGING
 extern WiFiServer log_server;

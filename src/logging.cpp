@@ -14,9 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+#include "logging.h"
+
 #include "config.h"
 
-#include "logging.h"
+#include <WiFiClient.h>
+#include <WiFiServer.h>
 
 #if NETWORK_LOGGING
 WiFiServer log_server(2222);
