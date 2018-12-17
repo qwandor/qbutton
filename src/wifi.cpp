@@ -40,6 +40,8 @@ bool wifi_connect() {
   LOG(password.c_str());
   LOGLN("'");
   WiFi.mode(WIFI_STA);
+  // Use mDNS hostname for DHCP too
+  WiFi.hostname(MDNS_HOSTNAME);
   WiFi.begin(ssid.c_str(), password.c_str());
   // Try to connect for 5 seconds
   for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i) {
@@ -75,7 +77,7 @@ bool wifi_setup() {
   IPAddress gateway(192, 168, 0, 1);
   IPAddress subnet(255, 255, 255, 0);
   WiFi.softAPConfig(local_ip, gateway, subnet);
-  WiFi.softAP("qButton");
+  WiFi.softAP(MDNS_HOSTNAME);
 
   #if NETWORK_LOGGING
   log_server.begin();
