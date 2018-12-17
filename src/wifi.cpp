@@ -84,7 +84,9 @@ bool wifi_setup() {
   log_server.setNoDelay(true);
   #endif
 
-  LOGLN("Running AP qButton. Local IP address:");
+  LOG("Running AP ");
+  LOG(MDNS_HOSTNAME);
+  LOGLN(". Local IP address:");
   LOGLN(WiFi.softAPIP());
 
   return false;
