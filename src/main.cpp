@@ -99,7 +99,7 @@ void handle_root() {
     wifiFile.close();
   }
 
-  server.send(200, "text/html", String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
+  String page = String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
     "<h2>Admin password</h2>" +
     "<form method=\"post\" action=\"/\">" +
@@ -118,7 +118,8 @@ void handle_root() {
     "</form><form method=\"post\" action=\"/\">" +
     "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">" +
     "<input type=\"submit\" value=\"Update command\"/>" +
-     "</form></body></html>");
+     "</form></body></html>";
+  server.send(200, "text/html", page);
 }
 
 void handle_oauth() {
