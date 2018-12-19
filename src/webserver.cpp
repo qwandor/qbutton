@@ -41,6 +41,23 @@ String load_command() {
   return read_line_from_file("/command.txt");
 }
 
+bool write_wifi_config(const String &ssid, const String &password) {
+  File wifiFile = SPIFFS.open("/wifi.txt", "w");
+  if (!wifiFile) {
+    LOGLN("Failed to open /wifi.txt for writing.");
+    return false;
+  }
+  // Don't use println, because it adds '\r' characters which we don't want.
+  wifiFile.print(ssid);
+  wifiFile.print('\n');
+  wifiFile.print(password);
+  wifiFile.print('\n');
+  wifiFile.close();
+  LOGLN("wrote new SSID and password");
+  LOGLN(ssid);
+  return true;
+}
+
 ///////////////////////////
 // HTTP request handlers //
 ///////////////////////////
@@ -66,19 +83,9 @@ void handle_root() {
     }
   }
   if (new_ssid.length() > 0) {
-    File wifiFile = SPIFFS.open("/wifi.txt", "w");
-    if (!wifiFile) {
-      LOGLN("Failed to open /wifi.txt for writing.");
-      error = "Failed to open /wifi.txt for writing.";
+    if (!write_wifi_config(new_ssid, new_password)) {
+      error = "Failed to write WiFi config.";
     }
-    // Don't use println, because it adds '\r' characters which we don't want.
-    wifiFile.print(new_ssid);
-    wifiFile.print('\n');
-    wifiFile.print(new_password);
-    wifiFile.print('\n');
-    wifiFile.close();
-    LOGLN("wrote new SSID and password");
-    LOGLN(new_ssid);
   }
   if (new_command.length() > 0) {
     update_command(new_command.c_str());
