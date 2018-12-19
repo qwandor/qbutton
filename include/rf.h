@@ -16,26 +16,14 @@ limitations under the License.
 
 #pragma once
 
-#define REQUEST_BUFFER_SIZE 200
+#include "ButtonCommand.h"
 
-#define MDNS_HOSTNAME "qbutton"
-#define ADMIN_USERNAME "admin"
-#define ADMIN_REALM "admin@qbutton"
+#include <Vector.h>
 
-// Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
-#define NETWORK_LOGGING 0
-#define SERIAL_LOGGING 0
-#define OTA_UPDATE 0
+extern Vector<ButtonCommand> button_commands;
 
-#if ENV_BUTTON
-// Pin which is connected via a resistor to CH_PD, to latch power on
-#define EN_PIN 4
-#define LED_PIN 2
+bool save_commands();
+bool load_commands();
 
-#define DRD_TIMEOUT 0.5
-#define DRD_ADDRESS 0x00
-#elif ENV_RFBRIDGE
-#define LED_PIN 13
-
-#define MAX_COMMANDS 20
-#endif
+bool learn_code(RfCode *code);
+void handle_message();
