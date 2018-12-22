@@ -29,7 +29,7 @@ This is replacement firmware for the [Sonoff RF Bridge 433](https://www.itead.cc
 1. Open the Sonoff RF Bridge (screws are under stickers on the base), solder a 4 pin header for the serial port. The [Tasmota wiki](https://github.com/arendst/Sonoff-Tasmota/wiki/Hardware-Preparation) has some more details.
 1. Connect a 3.3V USB serial adapter between the serial pins and your computer, remembering to swap to RX and TX lines.
 1. Switch the switch on the board towards the side that the serial pins are on.
-1. Connect the RF Bridge to USB power, while holding down the button on the side. You can release the button a few seconds after connecting pwoer. This puts it into reflashing mode.
+1. Connect the RF Bridge to power (either via the USB port or from the serial header, not both at the same time) while holding down the button on the side. You can release the button a few seconds after connecting pwoer. This puts it into reflashing mode.
 1. Build and install the firmware from the 'rfbridge' env using PlatformIO.
 1. Disconnect power and the serial cable. Switch the switch back to the other side.
 1. Connect the bridge device to power. After a few seconds it will show up as an access point named qbutton.
