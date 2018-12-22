@@ -16,6 +16,16 @@ limitations under the License.
 
 #pragma once
 
+#define MDNS_HOSTNAME "qswitch"
+#define ADMIN_USERNAME "admin"
+#define ADMIN_REALM "admin@qswitch"
+
+// Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
+#define NETWORK_LOGGING 0
+#define SERIAL_LOGGING 1
+#define OTA_UPDATE 0
+
+#if ENV_SWITCH
 #define LED_PIN 2
 
 #define SWITCH_PINS {LED_PIN, D5, D6, D7, D8, D1, D2}
@@ -24,12 +34,4 @@ limitations under the License.
 #define SWITCH_INITIAL_STATE {true, false, false, false, false, true, true}
 
 #define HEARTBEAT_INTERVAL 300000 // 5 Minutes
-
-// Either or neither of NETWORK_LOGGING and SERIAL_LOGGING may be enabled, not both.
-#define NETWORK_LOGGING 0
-#define SERIAL_LOGGING 1
-#define OTA_UPDATE 0
-
-#define MDNS_HOSTNAME "qswitch"
-#define ADMIN_USERNAME "admin"
-#define ADMIN_REALM "admin@qswitch"
+#endif
