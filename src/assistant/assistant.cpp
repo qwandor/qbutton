@@ -33,10 +33,10 @@ static const char *oauth_host = "www.googleapis.com";
 static const char *host = "embeddedassistant.googleapis.com";
 static const int httpsPort = 443;
 
-const char *client_id = "";
-static const char *client_secret = "";
-static const char *device_id = "my_device_id";
-static const char *device_model_id = "";
+const char *client_id = ASSISTANT_CLIENT_ID;
+static const char *client_secret = ASSISTANT_CLIENT_SECRET;
+static const char *device_id = ASSISTANT_DEVICE_ID;
+static const char *device_model_id = ASSISTANT_DEVICE_MODEL_ID;
 
 // Use web browser to view and copy
 // SHA1 fingerprint of the certificate

@@ -26,7 +26,7 @@ limitations under the License.
 #include <WebSocketsClient.h>
 
 const char *host = "iot.sinric.com";
-const char *api_key = "";
+const char *api_key = SINRIC_API_KEY;
 
 const uint8_t switch_pins[] = SWITCH_PINS;
 const size_t num_switches = sizeof(switch_pins);
