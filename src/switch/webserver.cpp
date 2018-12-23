@@ -99,16 +99,16 @@ void handle_root() {
 
   String page = String("<html><head><title>qSwitch config</title></head><body><h1>qSwitch config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
-    "<h2>Admin password</h2>" +
-    "<form method=\"post\" action=\"/\">" +
-    "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update admin password\"/>" +
-    "</form>" +
     "<h2>WiFi config</h2>" +
     "<form method=\"post\" action=\"/\">" +
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
     "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update WiFi config\"/></form>" +
+    "<h2>Admin password</h2>" +
+    "<form method=\"post\" action=\"/\">" +
+    "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
+    "<input type=\"submit\" value=\"Update admin password\"/>" +
+    "</form>" +
     "<h2>Switch IDs</h2>" +
     "<form method=\"post\" action=\"/\"><ul>";
   for (size_t i = 0; i < num_switches; ++i) {

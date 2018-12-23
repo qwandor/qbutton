@@ -119,6 +119,12 @@ void handle_root() {
 
   String page = String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
+    "<h2>WiFi config</h2>" +
+    "<form method=\"post\" action=\"/\">" +
+    "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
+    "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
+    "<input type=\"submit\" value=\"Update WiFi config\"/>" +
+    "</form>" +
     "<h2>Admin password</h2>" +
     "<form method=\"post\" action=\"/\">" +
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
@@ -128,12 +134,7 @@ void handle_root() {
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
     WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
-    "<h2>WiFi config</h2>" +
-    "<form method=\"post\" action=\"/\">" +
-    "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
-    "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update WiFi config\"/>" +
-    "</form><h2>Commands</h2><form method=\"post\" action=\"/\"><ul>";
+    "<h2>Commands</h2><form method=\"post\" action=\"/\"><ul>";
   for (uint i = 0; i < button_commands.size(); ++i) {
     page = page + "<li>" + button_commands[i].code.to_hex() +
       "<input type=\"text\" name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>" +
