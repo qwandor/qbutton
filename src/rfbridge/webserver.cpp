@@ -123,8 +123,7 @@ void handle_root() {
     "<form method=\"post\" action=\"/\">" +
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
     "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update WiFi config\"/>" +
-    "</form>" +
+    "<input type=\"submit\" value=\"Update WiFi config\"/></form>" +
     "<h2>Admin password</h2>" +
     "<form method=\"post\" action=\"/\">" +
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
