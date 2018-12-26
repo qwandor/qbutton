@@ -35,6 +35,8 @@ static const bool switch_inverted[num_switches] = SWITCH_INVERTED;
 static const bool switch_initial_state[num_switches] = SWITCH_INITIAL_STATE;
 
 String switch_ids[num_switches];
+static bool switch_state[num_switches];
+static int switch_brightness[num_switches];
 static WebSocketsClient websocket;
 static bool websocket_connected = false;
 static uint64_t heartbeat_timestamp = 0;
@@ -66,17 +68,48 @@ bool save_switch_ids() {
   return true;
 }
 
+/**
+ * Update the physical state of the switch at the given index to match the current values from `switch_state` and `switch_brightness`.
+ */
+void update_switch(size_t i) {
+  if (switch_state[i]) {
+    if (switch_brightness[i] == 100) {
+      digitalWrite(switch_pins[i], switch_inverted[i] ? LOW : HIGH);
+    } else {
+      int scaled_value = 255 * switch_brightness[i] / 100;
+      if (switch_inverted[i]) {
+        scaled_value = 255 - scaled_value;
+      }
+      analogWrite(switch_pins[i], scaled_value);
+    }
+  } else {
+    digitalWrite(switch_pins[i], switch_inverted[i] ? HIGH : LOW);
+  }
+}
+
 void init_switches() {
   for (size_t i = 0; i < num_switches; ++i) {
     pinMode(switch_pins[i], OUTPUT);
-    digitalWrite(switch_pins[i], switch_initial_state[i] ^ switch_inverted[i] ? HIGH : LOW);
+    switch_state[i] = switch_initial_state[i];
+    switch_brightness[i] = 100;
+    update_switch(i);
   }
 }
 
 void switch_switch(const String &device_id, bool state) {
   for (size_t i = 0; i < num_switches; ++i) {
     if (device_id == switch_ids[i]) {
-      digitalWrite(switch_pins[i], state ^ switch_inverted[i] ? HIGH : LOW);
+      switch_state[i] = state;
+      update_switch(i);
+    }
+  }
+}
+
+void set_brightness(const String &device_id, int brightness) {
+  for (size_t i = 0; i < num_switches; ++i) {
+    if (device_id == switch_ids[i]) {
+      switch_brightness[i] = brightness;
+      update_switch(i);
     }
   }
 }
@@ -129,6 +162,9 @@ void websocket_event(WStype_t type, uint8_t *payload, size_t length) {
           String value = json["value"]["on"];
           LOGLN(value);
           switch_switch(device_id, value == "true");
+        } else if (action == "action.devices.commands.BrightnessAbsolute") {
+          String value = json["value"]["brightness"];
+          set_brightness(device_id, value.toInt());
         } else if (action == "test") {
           LOGLN("Websocket got test command");
         }
