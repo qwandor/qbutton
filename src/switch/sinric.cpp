@@ -35,8 +35,8 @@ static const bool switch_inverted[num_switches] = SWITCH_INVERTED;
 static const bool switch_initial_state[num_switches] = SWITCH_INITIAL_STATE;
 
 String switch_ids[num_switches];
-static bool switch_state[num_switches];
-static int switch_brightness[num_switches];
+bool switch_state[num_switches];
+int switch_brightness[num_switches];
 static WebSocketsClient websocket;
 static bool websocket_connected = false;
 static uint64_t heartbeat_timestamp = 0;

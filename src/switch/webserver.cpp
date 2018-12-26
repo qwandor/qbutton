@@ -119,7 +119,7 @@ void handle_root() {
     "<form method=\"post\" action=\"/\"><ul>";
   for (size_t i = 0; i < num_switches; ++i) {
     page = page + "<li><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/> " +
-      switch_names[i] + " (pin" + switch_pins[i] + ")</li>";
+      switch_names[i] + " (pin" + switch_pins[i] + "): " + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)</li>";
   }
   page += "</ul><input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
   page += "</body></html>";
