@@ -27,6 +27,7 @@ limitations under the License.
 #include <ESP8266WebServer.h>
 #include <FS.h>
 #include <Vector.h>
+#include <time.h>
 
 static ESP8266WebServer server(80);
 static String admin_password;
@@ -117,8 +118,13 @@ void handle_root() {
     wifiFile.close();
   }
 
+  time_t now = time(nullptr);
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+
   String page = String("<html><head><title>qButton config</title></head><body><h1>qButton config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
+    "<p>Device time: " + asctime(&timeinfo) + "UTC</p>" +
     "<h2>WiFi config</h2>" +
     "<form method=\"post\" action=\"/\">" +
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
