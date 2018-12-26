@@ -53,6 +53,7 @@ void setup() {
   ArduinoOTA.setHostname(MDNS_HOSTNAME);
   ArduinoOTA.begin();
   #endif
+  assistant_init();
 }
 
 void loop() {

@@ -20,5 +20,6 @@ limitations under the License.
 
 extern const char *client_id;
 
+bool assistant_init();
 void auth_and_send_request(const String &command);
 bool oauth_with_code(const String &code);

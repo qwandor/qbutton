@@ -53,6 +53,7 @@ void setup() {
 
   // No point trying to send the Google Assistant request if we are running in AP mode.
   if (wifi_setup()) {
+    assistant_init();
     auth_and_send_request(load_command());
 
     // If the user double-presses the reset button, skip sleeping so that they can reconfigure it.

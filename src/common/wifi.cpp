@@ -22,6 +22,24 @@ limitations under the License.
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
+#include <time.h>
+
+void sync_time() {
+  // Set clock using SNTP. This is necessary to verify SSL certificates.
+  LOGLN("Setting time using SNTP");
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  time_t now = time(nullptr);
+  while (now < 3600 * 48) {
+    delay(10);
+    LOG(".");
+    now = time(nullptr);
+  }
+  LOGLN("");
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  LOG("Current time: ");
+  LOGLN(asctime(&timeinfo));
+}
 
 bool wifi_connect() {
   // Read SSID and password from file.
@@ -56,6 +74,8 @@ bool wifi_connect() {
   LOGLN("WiFi connected");
   LOGLN("IP address: ");
   LOGLN(WiFi.localIP());
+
+  sync_time();
 
   return true;
 }
