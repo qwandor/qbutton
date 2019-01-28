@@ -26,3 +26,5 @@ limitations under the License.
 #define MDNS_HOSTNAME "joist"
 #define ADMIN_USERNAME "admin"
 #define ADMIN_REALM "admin@qbutton"
+
+#define LOCAL_SERVER_PORT 10158

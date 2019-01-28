@@ -25,6 +25,8 @@ limitations under the License.
 #include <ESP8266WiFi.h>
 #include <FS.h>
 
+WiFiServer local_server(LOCAL_SERVER_PORT);
+
 //////////////////
 // Entry points //
 //////////////////
@@ -40,6 +42,9 @@ void setup() {
   // No point trying to connect to the server if we are running in AP mode.
   if (wifi_setup()) {
   }
+
+  local_server.begin();
+  local_server.setNoDelay(true);
 
   if (!MDNS.begin(MDNS_HOSTNAME)) {
     LOGLN("Error starting mDNS");
@@ -57,4 +62,12 @@ void loop() {
   #if OTA_UPDATE
   ArduinoOTA.handle();
   #endif
+
+  WiFiClient local_client = local_server.available();
+  if (local_client) {
+    String line = local_client.readStringUntil('\n');
+    LOG("Got command '");
+    LOG(line);
+    LOGLN("'");
+  }
 }
