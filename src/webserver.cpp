@@ -18,7 +18,6 @@ limitations under the License.
 
 #include "config.h"
 #include "logging.h"
-#include "sinric.h"
 #include "streamutils.h"
 
 #include <Arduino.h>
@@ -75,18 +74,6 @@ void handle_root() {
     }
   }
 
-  // Update switch IDs.
-  bool updated_switch_ids = false;
-  for (size_t i = 0; i < num_switches; ++i) {
-    if (server.hasArg("update") && server.hasArg(String("switch_id") + i)) {
-      switch_ids[i] = server.arg(String("switch_id") + i);
-      updated_switch_ids = true;
-    }
-  }
-  if (updated_switch_ids) {
-    save_switch_ids();
-  }
-
   // Read whatever is on disk.
   String ssid, password;
   File wifiFile = SPIFFS.open("/wifi.txt", "r");
@@ -102,7 +89,7 @@ void handle_root() {
   struct tm timeinfo;
   gmtime_r(&now, &timeinfo);
 
-  String page = String("<html><head><title>qSwitch config</title></head><body><h1>qSwitch config</h1>") +
+  String page = String("<html><head><title>Joist config</title></head><body><h1>Joist config</h1>") +
     "<p style=\"color: red;\">" + error + "</p>" +
     "<p>Device time: " + asctime(&timeinfo) + "UTC</p>" +
     "<h2>WiFi config</h2>" +
@@ -115,14 +102,7 @@ void handle_root() {
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update admin password\"/>" +
     "</form>" +
-    "<h2>Switch IDs</h2>" +
-    "<form method=\"post\" action=\"/\"><ul>";
-  for (size_t i = 0; i < num_switches; ++i) {
-    page = page + "<li><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/> " +
-      switch_names[i] + " (pin" + switch_pins[i] + "): " + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)</li>";
-  }
-  page += "</ul><input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
-  page += "</body></html>";
+    "</body></html>";
   server.send(200, "text/html", page);
 }
 

@@ -21,45 +21,8 @@ limitations under the License.
 #define SERIAL_LOGGING 0
 #define OTA_UPDATE 0
 
-#define ASSISTANT_CLIENT_ID ""
-#define ASSISTANT_CLIENT_SECRET ""
-#define ASSISTANT_DEVICE_ID "my_device_id"
-#define ASSISTANT_DEVICE_MODEL_ID ""
-
-#if ENV_BUTTON
-// Pin which is connected via a resistor to CH_PD, to latch power on
-#define EN_PIN 4
 #define LED_PIN 2
 
-#define MDNS_HOSTNAME "qbutton"
+#define MDNS_HOSTNAME "joist"
 #define ADMIN_USERNAME "admin"
 #define ADMIN_REALM "admin@qbutton"
-
-#define REQUEST_BUFFER_SIZE 200
-#define DRD_TIMEOUT 0.5
-#define DRD_ADDRESS 0x00
-#elif ENV_RFBRIDGE
-#define LED_PIN 13
-
-#define MDNS_HOSTNAME "qbutton"
-#define ADMIN_USERNAME "admin"
-#define ADMIN_REALM "admin@qbutton"
-
-#define REQUEST_BUFFER_SIZE 200
-#define MAX_COMMANDS 20
-#elif ENV_SWITCH
-#define LED_PIN 2
-
-#define SWITCH_PINS {LED_PIN, D5, D6, D7, D8, D1, D2}
-#define SWITCH_NAMES {"LED", "D5", "D6", "D7", "D8", "D1", "D2"}
-#define SWITCH_INVERTED {true, false, false, false, false, false, false}
-#define SWITCH_INITIAL_STATE {true, false, false, false, false, true, true}
-
-#define SINRIC_API_KEY ""
-
-#define MDNS_HOSTNAME "qswitch"
-#define ADMIN_USERNAME "admin"
-#define ADMIN_REALM "admin@qswitch"
-
-#define HEARTBEAT_INTERVAL 300000 // 5 Minutes
-#endif
