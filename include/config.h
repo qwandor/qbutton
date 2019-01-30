@@ -28,3 +28,8 @@ limitations under the License.
 #define ADMIN_REALM "admin@qbutton"
 
 #define LOCAL_SERVER_PORT 10158
+
+#define MOTOR_A_PWM D1
+#define MOTOR_A_DIRECTION D3
+#define MOTOR_B_PWM D2
+#define MOTOR_B_DIRECTION D4

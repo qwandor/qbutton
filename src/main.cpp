@@ -35,6 +35,10 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   pinMode(LED_PIN, OUTPUT);
+  pinMode(MOTOR_A_PWM, OUTPUT);
+  pinMode(MOTOR_A_DIRECTION, OUTPUT);
+  pinMode(MOTOR_B_PWM, OUTPUT);
+  pinMode(MOTOR_B_DIRECTION, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
   SPIFFS.begin();
