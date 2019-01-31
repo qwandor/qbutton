@@ -61,12 +61,18 @@ void setup() {
   pinMode(RIGHT_PWM, OUTPUT);
   pinMode(RIGHT_DIRECTION, OUTPUT);
 
+  digitalWrite(LEFT_PWM, LOW);
+  digitalWrite(RIGHT_PWM, LOW);
+  digitalWrite(LEFT_DIRECTION, LOW);
+  digitalWrite(RIGHT_DIRECTION, LOW);
+
   digitalWrite(LED_PIN, LOW);
 
   SPIFFS.begin();
 
   // No point trying to connect to the server if we are running in AP mode.
   if (wifi_setup()) {
+    // TODO: Connect to server if configured
   }
 
   local_server.begin();
