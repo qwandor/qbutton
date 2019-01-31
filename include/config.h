@@ -21,7 +21,7 @@ limitations under the License.
 #define SERIAL_LOGGING 1
 #define OTA_UPDATE 1
 
-#define LED_PIN D5
+#define LED_PIN D4
 
 #define MDNS_HOSTNAME "joist"
 #define ADMIN_USERNAME "admin"
@@ -29,7 +29,17 @@ limitations under the License.
 
 #define LOCAL_SERVER_PORT 10158
 
+#ifdef NODEMCU
 #define LEFT_PWM D1
 #define RIGHT_PWM D2
 #define LEFT_DIRECTION D3
 #define RIGHT_DIRECTION D4
+
+#else
+#define LEFT_PWM D1
+#define LEFT_FORWARD D2
+#define LEFT_REVERSE D5
+#define RIGHT_PWM D7
+#define RIGHT_FORWARD D8
+#define RIGHT_REVERSE D6
+#endif

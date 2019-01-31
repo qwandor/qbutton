@@ -27,26 +27,29 @@ limitations under the License.
 
 class Motor {
 public:
-  Motor(int directionPin, int pwmPin): _directionPin(directionPin), _pwmPin(pwmPin) {}
+  Motor(int forwardPin, int reversePin, int pwmPin): _forwardPin(forwardPin), _reversePin(reversePin), _pwmPin(pwmPin) {}
 
   void brake() {
-    analogWrite(_pwmPin, 0);
-    digitalWrite(_directionPin, 0);
+    analogWrite(_pwmPin, 1023);
+    digitalWrite(_forwardPin, LOW);
+    digitalWrite(_reversePin, LOW);
   }
 
   void turn(bool forwards, float speed) {
-    digitalWrite(_directionPin, forwards ? HIGH : LOW);
+    digitalWrite(_forwardPin, forwards ? HIGH : LOW);
+    digitalWrite(_reversePin, forwards ? LOW : HIGH);
     analogWrite(_pwmPin, speed * 1023);
   }
 
 private:
-  int _directionPin;
+  int _forwardPin;
+  int _reversePin;
   int _pwmPin;
 };
 
 WiFiServer local_server(LOCAL_SERVER_PORT);
-Motor leftWheel(LEFT_DIRECTION, LEFT_PWM);
-Motor rightWheel(RIGHT_DIRECTION, RIGHT_PWM);
+Motor leftWheel(LEFT_FORWARD, LEFT_REVERSE, LEFT_PWM);
+Motor rightWheel(RIGHT_FORWARD, RIGHT_REVERSE, RIGHT_PWM);
 
 //////////////////
 // Entry points //
@@ -57,14 +60,14 @@ void setup() {
   Serial.println();
   pinMode(LED_PIN, OUTPUT);
   pinMode(LEFT_PWM, OUTPUT);
-  pinMode(LEFT_DIRECTION, OUTPUT);
+  pinMode(LEFT_FORWARD, OUTPUT);
+  pinMode(LEFT_REVERSE, OUTPUT);
   pinMode(RIGHT_PWM, OUTPUT);
-  pinMode(RIGHT_DIRECTION, OUTPUT);
+  pinMode(RIGHT_FORWARD, OUTPUT);
+  pinMode(RIGHT_REVERSE, OUTPUT);
 
   digitalWrite(LEFT_PWM, LOW);
   digitalWrite(RIGHT_PWM, LOW);
-  digitalWrite(LEFT_DIRECTION, LOW);
-  digitalWrite(RIGHT_DIRECTION, LOW);
 
   digitalWrite(LED_PIN, LOW);
 
