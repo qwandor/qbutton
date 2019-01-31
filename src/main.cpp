@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+#include "main.h"
+
 #include "config.h"
 #include "logging.h"
 #include "streamutils.h"
@@ -47,11 +49,42 @@ private:
   int _pwmPin;
 };
 
+String serverHostname;
+uint16_t serverPort;
+
 WiFiServer localServer(LOCAL_SERVER_PORT);
 WiFiClient localClient;
+WiFiClient remoteClient;
 
 Motor leftWheel(LEFT_FORWARD, LEFT_REVERSE, LEFT_PWM);
 Motor rightWheel(RIGHT_FORWARD, RIGHT_REVERSE, RIGHT_PWM);
+
+bool load_server_details() {
+  File file = SPIFFS.open("/server.txt", "r");
+  if (!file) {
+    LOGLN("Failed to open /server.txt for reading.");
+    return false;
+  }
+  serverHostname = file.readStringUntil(' ');
+  serverPort = file.readStringUntil('\n').toInt();
+  file.close();
+  return true;
+}
+
+bool save_server_details() {
+  File file = SPIFFS.open("/server.txt", "w");
+  if (!file) {
+    LOGLN("Failed to open /server.txt for writing.");
+    return false;
+  }
+  file.print(serverHostname);
+  file.print(' ');
+  file.print(serverPort);
+  // Don't use println, because it adds '\r' characters which we don't want.
+  file.print('\n');
+  file.close();
+  return true;
+}
 
 //////////////////
 // Entry points //
@@ -74,10 +107,11 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   SPIFFS.begin();
+  load_server_details();
 
   // No point trying to connect to the server if we are running in AP mode.
-  if (wifi_setup()) {
-    // TODO: Connect to server if configured
+  if (wifi_setup() && serverHostname.length() > 0) {
+    remoteClient.connect(serverHostname, serverPort);
   }
 
   localServer.begin();
@@ -169,6 +203,13 @@ void loop() {
   #if OTA_UPDATE
   ArduinoOTA.handle();
   #endif
+
+  if (!remoteClient) {
+    remoteClient.connect(serverHostname, serverPort);
+  } else if (remoteClient.available() > 5) {
+    String line = remoteClient.readStringUntil('\n');
+    processCommand(line);
+  }
 
   if (!localClient) {
     localClient = localServer.available();

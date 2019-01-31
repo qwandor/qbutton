@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "config.h"
 #include "logging.h"
+#include "main.h"
 #include "streamutils.h"
 
 #include <Arduino.h>
@@ -55,7 +56,6 @@ void handle_root() {
     return;
   }
 
-  // If a new SSID and password have been sent, save them.
   const String &new_admin_password = server.arg("admin_password");
   const String &new_ssid = server.arg("ssid");
   const String &new_password = server.arg("password");
@@ -68,10 +68,19 @@ void handle_root() {
       error = "Failed to save new admin password.";
     }
   }
+  // If a new SSID and password have been sent, save them.
   if (new_ssid.length() > 0) {
     if (!write_wifi_config(new_ssid, new_password)) {
       error = "Failed to write WiFi config.";
     }
+  }
+
+  const String &new_server_hostname = server.arg("server_hostname");
+  const String &new_server_port = server.arg("server_port");
+  if (new_server_hostname.length() > 0) {
+    serverHostname = new_server_hostname;
+    serverPort = new_server_port.toInt();
+    save_server_details();
   }
 
   // Read whatever is on disk.
@@ -101,6 +110,12 @@ void handle_root() {
     "<form method=\"post\" action=\"/\">" +
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update admin password\"/>" +
+    "</form>" +
+    "<h2>Joist server</h2>" +
+    "<form method=\"post\" action=\"/\">" +
+    "Hostname: <input type=\"text\" name=\"server_hostname\" value=\"" + serverHostname + "\"/><br/>" +
+    "Port: <input type=\"text\" name=\"server_port\" value=\"" + serverPort + "\"/><br/>" +
+    "<input type=\"submit\" value=\"Update server details\"/>" +
     "</form>" +
     "</body></html>";
   server.send(200, "text/html", page);
