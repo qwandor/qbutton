@@ -25,7 +25,28 @@ limitations under the License.
 #include <ESP8266WiFi.h>
 #include <FS.h>
 
+class Motor {
+public:
+  Motor(int directionPin, int pwmPin): _directionPin(directionPin), _pwmPin(pwmPin) {}
+
+  void brake() {
+    analogWrite(_pwmPin, 0);
+    digitalWrite(_directionPin, 0);
+  }
+
+  void turn(bool forwards, float speed) {
+    digitalWrite(_directionPin, forwards ? HIGH : LOW);
+    analogWrite(_pwmPin, speed * 1023);
+  }
+
+private:
+  int _directionPin;
+  int _pwmPin;
+};
+
 WiFiServer local_server(LOCAL_SERVER_PORT);
+Motor leftWheel(LEFT_DIRECTION, LEFT_PWM);
+Motor rightWheel(RIGHT_DIRECTION, RIGHT_PWM);
 
 //////////////////
 // Entry points //
@@ -35,10 +56,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   pinMode(LED_PIN, OUTPUT);
-  pinMode(MOTOR_A_PWM, OUTPUT);
-  pinMode(MOTOR_A_DIRECTION, OUTPUT);
-  pinMode(MOTOR_B_PWM, OUTPUT);
-  pinMode(MOTOR_B_DIRECTION, OUTPUT);
+  pinMode(LEFT_PWM, OUTPUT);
+  pinMode(LEFT_DIRECTION, OUTPUT);
+  pinMode(RIGHT_PWM, OUTPUT);
+  pinMode(RIGHT_DIRECTION, OUTPUT);
+
   digitalWrite(LED_PIN, LOW);
 
   SPIFFS.begin();
@@ -61,6 +83,76 @@ void setup() {
   #endif
 }
 
+void drive(String direction, float speed) {
+  if (direction == "brake") {
+    leftWheel.brake();
+    rightWheel.brake();
+  } else if (direction == "f") {
+		leftWheel.turn(true, speed);
+		rightWheel.turn(true, speed);
+  } else if (direction == "b") {
+		leftWheel.turn(false, speed);
+		rightWheel.turn(false, speed);
+  } else if (direction == "l") {
+		leftWheel.turn(false, speed);
+		rightWheel.turn(true, speed);
+  } else if (direction == "r") {
+		leftWheel.turn(true, speed);
+		rightWheel.turn(false, speed);
+  } else if (direction == "fl") {
+		leftWheel.brake();
+		rightWheel.turn(true, speed);
+  } else if (direction == "fr") {
+		leftWheel.turn(true, speed);
+		rightWheel.brake();
+  } else if (direction == "bl") {
+		leftWheel.brake();
+		rightWheel.turn(false, speed);
+  } else if (direction == "br") {
+    leftWheel.turn(false, speed);
+    rightWheel.brake();
+  } else {
+    LOG("Unrecognised direction '");
+    LOG(direction);
+    LOGLN("'");
+  }
+}
+
+void runCommand(String direction, float speed, int duration) {
+  // Turn LED off while we drive.
+  digitalWrite(LED_PIN, HIGH);
+
+  drive(direction, speed);
+  delay(duration);
+  drive("brake", 0);
+
+  digitalWrite(LED_PIN, LOW);
+}
+
+void processCommand(String line) {
+  LOG("Got command '");
+  LOG(line);
+  LOGLN("'");
+  int firstSpace = line.indexOf(' ');
+  int secondSpace = line.indexOf(' ', firstSpace + 1);
+  if (firstSpace == -1 || secondSpace == -1) {
+    LOGLN("Invalid command");
+    return;
+  }
+  String direction = line.substring(0, firstSpace);
+  float speed = line.substring(firstSpace + 1, secondSpace).toFloat();
+  int duration = line.substring(secondSpace + 1).toInt();
+  LOG("direction: '");
+  LOG(direction);
+  LOG("' speed: '");
+  LOG(speed);
+  LOG("' duration: '");
+  LOG(duration);
+  LOGLN("'");
+
+  runCommand(direction, speed, duration);
+}
+
 void loop() {
   webserver_loop();
   #if OTA_UPDATE
@@ -70,8 +162,6 @@ void loop() {
   WiFiClient local_client = local_server.available();
   if (local_client) {
     String line = local_client.readStringUntil('\n');
-    LOG("Got command '");
-    LOG(line);
-    LOGLN("'");
+    processCommand(line);
   }
 }

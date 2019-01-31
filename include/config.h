@@ -29,7 +29,7 @@ limitations under the License.
 
 #define LOCAL_SERVER_PORT 10158
 
-#define MOTOR_A_PWM D1
-#define MOTOR_A_DIRECTION D3
-#define MOTOR_B_PWM D2
-#define MOTOR_B_DIRECTION D4
+#define LEFT_PWM D1
+#define RIGHT_PWM D2
+#define LEFT_DIRECTION D3
+#define RIGHT_DIRECTION D4
