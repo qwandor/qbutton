@@ -153,14 +153,21 @@ void processCommand(String line) {
   runCommand(direction, speed, duration);
 }
 
+WiFiClient local_client;
+
 void loop() {
   webserver_loop();
   #if OTA_UPDATE
   ArduinoOTA.handle();
   #endif
 
-  WiFiClient local_client = local_server.available();
-  if (local_client) {
+  if (!local_client) {
+    local_client = local_server.available();
+    if (local_client) {
+      LOG("Got new client ");
+      LOGLN(local_client.remoteIP());
+    }
+  } else if (local_client.available() > 5) {
     String line = local_client.readStringUntil('\n');
     processCommand(line);
   }
