@@ -81,6 +81,7 @@ void handle_root() {
     serverHostname = new_server_hostname;
     serverPort = new_server_port.toInt();
     save_server_details();
+    remoteClient.connect(serverHostname, serverPort);
   }
 
   // Read whatever is on disk.
@@ -113,6 +114,7 @@ void handle_root() {
     "</form>" +
     "<h2>Joist server</h2>" +
     "<form method=\"post\" action=\"/\">" +
+    "<p>" + (remoteClient.connected() ? "Connected" : "Not connected") + "</p>" +
     "Hostname: <input type=\"text\" name=\"server_hostname\" value=\"" + serverHostname + "\"/><br/>" +
     "Port: <input type=\"text\" name=\"server_port\" value=\"" + serverPort + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update server details\"/>" +
