@@ -37,9 +37,9 @@ limitations under the License.
 
 #else
 #define LEFT_PWM D1
-#define LEFT_FORWARD D2
-#define LEFT_REVERSE D5
+#define LEFT_FORWARD D5
+#define LEFT_REVERSE D2
 #define RIGHT_PWM D7
-#define RIGHT_FORWARD D8
-#define RIGHT_REVERSE D6
+#define RIGHT_FORWARD D6
+#define RIGHT_REVERSE D8
 #endif
