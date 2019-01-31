@@ -47,7 +47,9 @@ private:
   int _pwmPin;
 };
 
-WiFiServer local_server(LOCAL_SERVER_PORT);
+WiFiServer localServer(LOCAL_SERVER_PORT);
+WiFiClient localClient;
+
 Motor leftWheel(LEFT_FORWARD, LEFT_REVERSE, LEFT_PWM);
 Motor rightWheel(RIGHT_FORWARD, RIGHT_REVERSE, RIGHT_PWM);
 
@@ -78,8 +80,8 @@ void setup() {
     // TODO: Connect to server if configured
   }
 
-  local_server.begin();
-  local_server.setNoDelay(true);
+  localServer.begin();
+  localServer.setNoDelay(true);
 
   if (!MDNS.begin(MDNS_HOSTNAME)) {
     LOGLN("Error starting mDNS");
@@ -162,22 +164,20 @@ void processCommand(String line) {
   runCommand(direction, speed, duration);
 }
 
-WiFiClient local_client;
-
 void loop() {
   webserver_loop();
   #if OTA_UPDATE
   ArduinoOTA.handle();
   #endif
 
-  if (!local_client) {
-    local_client = local_server.available();
-    if (local_client) {
+  if (!localClient) {
+    localClient = localServer.available();
+    if (localClient) {
       LOG("Got new client ");
-      LOGLN(local_client.remoteIP());
+      LOGLN(localClient.remoteIP());
     }
-  } else if (local_client.available() > 5) {
-    String line = local_client.readStringUntil('\n');
+  } else if (localClient.available() > 5) {
+    String line = localClient.readStringUntil('\n');
     processCommand(line);
   }
 }
