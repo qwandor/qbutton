@@ -91,10 +91,12 @@ void handle_root() {
     if (server.hasArg(String("on") + i)) {
       switch_state[i] = true;
       update_switch(i);
+      send_switch_state(i);
       break;
     } else if (server.hasArg(String("off") + i)) {
       switch_state[i] = false;
       update_switch(i);
+      send_switch_state(i);
       break;
     }
   }

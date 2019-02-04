@@ -32,6 +32,7 @@ extern int switch_brightness[];
 bool save_switch_config();
 bool save_switch_ids();
 
+void send_switch_state(size_t i);
 void sinric_setup();
 void sinric_connect();
 void sinric_loop();
