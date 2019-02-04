@@ -55,30 +55,11 @@ bool load_switch_config() {
 }
 
 bool load_switch_ids() {
-  File file = SPIFFS.open("/switch_ids.txt", "r");
-  if (!file) {
-    LOGLN("Failed to open /switch_ids.txt for reading.");
-    return false;
-  }
-  for (size_t i = 0; i < num_switches; ++i) {
-    switch_ids[i] = file.readStringUntil('\n');
-  }
-  file.close();
-  return true;
+  return read_strings_from_file("/switch_ids.txt", switch_ids, num_switches);
 }
 
 bool save_switch_ids() {
-  File file = SPIFFS.open("/switch_ids.txt", "w");
-  if (!file) {
-    LOGLN("Failed to open /switch_ids.txt for writing.");
-    return false;
-  }
-  for (size_t i = 0; i < num_switches; ++i) {
-    file.print(switch_ids[i]);
-    file.print('\n');
-  }
-  file.close();
-  return true;
+  return write_strings_to_file("/switch_ids.txt", switch_ids, num_switches);
 }
 
 /**

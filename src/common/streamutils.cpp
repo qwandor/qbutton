@@ -61,6 +61,37 @@ String read_line_from_file(const char *filename) {
   return token;
 }
 
+bool write_strings_to_file(const char *path, const String values[], size_t size) {
+  File file = SPIFFS.open(path, "w");
+  if (!file) {
+    LOG("Failed to open ");
+    LOG(path);
+    LOGLN(" for writing.");
+    return false;
+  }
+  for (size_t i = 0; i < size; ++i) {
+    file.print(values[i]);
+    file.print('\n');
+  }
+  file.close();
+  return true;
+}
+
+bool read_strings_from_file(const char *path, String values[], size_t size) {
+  File file = SPIFFS.open(path, "r");
+  if (!file) {
+    LOG("Failed to open ");
+    LOG(path);
+    LOGLN(" for reading.");
+    return false;
+  }
+  for (size_t i = 0; i < size; ++i) {
+    values[i] = file.readStringUntil('\n');
+  }
+  file.close();
+  return true;
+}
+
 bool write_bools_to_file(const char *path, const bool values[], size_t size) {
   File file = SPIFFS.open(path, "w");
   if (!file) {
