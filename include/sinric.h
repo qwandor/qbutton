@@ -30,3 +30,4 @@ bool save_switch_ids();
 void sinric_setup();
 void sinric_connect();
 void sinric_loop();
+void update_switch(size_t i);

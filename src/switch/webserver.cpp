@@ -75,6 +75,19 @@ void handle_root() {
     }
   }
 
+  // Toggle switches
+  for (size_t i = 0; i < num_switches; ++i) {
+    if (server.hasArg(String("on") + i)) {
+      switch_state[i] = true;
+      update_switch(i);
+      break;
+    } else if (server.hasArg(String("off") + i)) {
+      switch_state[i] = false;
+      update_switch(i);
+      break;
+    }
+  }
+
   // Update switch IDs.
   bool updated_switch_ids = false;
   for (size_t i = 0; i < num_switches; ++i) {
@@ -119,7 +132,8 @@ void handle_root() {
     "<form method=\"post\" action=\"/\"><ul>";
   for (size_t i = 0; i < num_switches; ++i) {
     page = page + "<li><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/> " +
-      switch_names[i] + " (pin" + switch_pins[i] + "): " + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)</li>";
+      switch_names[i] + " (pin" + switch_pins[i] + "): " + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)" +
+      "<input type=\"submit\" name=\"" + (switch_state[i] ? "off" : "on") + i + "\" value=\"Switch " + (switch_state[i] ? "off" : "on") + "\"/></li>";
   }
   page += "</ul><input type=\"submit\" name=\"update\" value=\"Update IDs\"/></form>";
   page += "</body></html>";
