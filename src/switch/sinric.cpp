@@ -127,7 +127,9 @@ void set_power_state_on_server(String device_id, bool state) {
 
 void send_switch_states() {
   for (size_t i = 0; i < num_switches; ++i) {
-    set_power_state_on_server(switch_ids[i], (digitalRead(switch_pins[i]) == HIGH) ^ switch_inverted[i]);
+    if (switch_ids[i].length() > 0) {
+      set_power_state_on_server(switch_ids[i], (digitalRead(switch_pins[i]) == HIGH) ^ switch_inverted[i]);
+    }
   }
 }
 
