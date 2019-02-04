@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "config.h"
 #include "logging.h"
+#include "streamutils.h"
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -31,15 +32,27 @@ const char *api_key = SINRIC_API_KEY;
 const uint8_t switch_pins[] = SWITCH_PINS;
 const size_t num_switches = sizeof(switch_pins);
 const char *const switch_names[num_switches] = SWITCH_NAMES;
-static const bool switch_inverted[num_switches] = SWITCH_INVERTED;
-static const bool switch_initial_state[num_switches] = SWITCH_INITIAL_STATE;
 
+bool switch_inverted[num_switches];
+bool switch_initial_state[num_switches];
 String switch_ids[num_switches];
 bool switch_state[num_switches];
 int switch_brightness[num_switches];
 static WebSocketsClient websocket;
 static bool websocket_connected = false;
 static uint64_t heartbeat_timestamp = 0;
+
+bool save_switch_config() {
+  bool status1 = write_bools_to_file("/switch_inverted.txt", switch_inverted, num_switches);
+  bool status2 = write_bools_to_file("/switch_initial_state.txt", switch_initial_state, num_switches);
+  return status1 && status2;
+}
+
+bool load_switch_config() {
+  bool status1 = read_bools_from_file("/switch_inverted.txt", switch_inverted, num_switches);
+  bool status2 = read_bools_from_file("/switch_initial_state.txt", switch_initial_state, num_switches);
+  return status1 && status2;
+}
 
 bool load_switch_ids() {
   File file = SPIFFS.open("/switch_ids.txt", "r");
@@ -177,6 +190,7 @@ void websocket_event(WStype_t type, uint8_t *payload, size_t length) {
 }
 
 void sinric_setup() {
+  load_switch_config();
   load_switch_ids();
   init_switches();
 }

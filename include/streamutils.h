@@ -24,3 +24,5 @@ limitations under the License.
 void copyStreamToPrint(Stream &from, Print &to);
 bool write_line_to_file(const char *path, const char *token);
 String read_line_from_file(const char *filename);
+bool write_bools_to_file(const char *path, const bool values[], size_t size);
+bool read_bools_from_file(const char *path, bool values[], size_t size);

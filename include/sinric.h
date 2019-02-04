@@ -21,10 +21,14 @@ limitations under the License.
 extern const uint8_t switch_pins[];
 extern const char *const switch_names[];
 extern const size_t num_switches;
+
+extern bool switch_inverted[];
+extern bool switch_initial_state[];
 extern String switch_ids[];
 extern bool switch_state[];
 extern int switch_brightness[];
 
+bool save_switch_config();
 bool save_switch_ids();
 
 void sinric_setup();
