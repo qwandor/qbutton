@@ -53,8 +53,6 @@ limitations under the License.
 #define SWITCH_PINS {LED_PIN, D5, D6, D7, D8, D1, D2}
 #define SWITCH_NAMES {"LED", "D5", "D6", "D7", "D8", "D1", "D2"}
 
-#define SINRIC_API_KEY ""
-
 #define MDNS_HOSTNAME "qswitch"
 #define ADMIN_USERNAME "admin"
 #define ADMIN_REALM "admin@qswitch"

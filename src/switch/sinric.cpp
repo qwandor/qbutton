@@ -27,17 +27,18 @@ limitations under the License.
 #include <WebSocketsClient.h>
 
 const char *host = "iot.sinric.com";
-const char *api_key = SINRIC_API_KEY;
 
 const uint8_t switch_pins[] = SWITCH_PINS;
 const size_t num_switches = sizeof(switch_pins);
 const char *const switch_names[num_switches] = SWITCH_NAMES;
 
+String sinric_api_key;
 bool switch_inverted[num_switches];
 bool switch_initial_state[num_switches];
 String switch_ids[num_switches];
 bool switch_state[num_switches];
 int switch_brightness[num_switches];
+
 static WebSocketsClient websocket;
 static bool websocket_connected = false;
 static uint64_t heartbeat_timestamp = 0;
@@ -171,6 +172,7 @@ void websocket_event(WStype_t type, uint8_t *payload, size_t length) {
 }
 
 void sinric_setup() {
+  sinric_api_key = read_line_from_file("/sinric_api_key.txt");
   load_switch_config();
   load_switch_ids();
   init_switches();
@@ -179,7 +181,7 @@ void sinric_setup() {
 void sinric_connect() {
   websocket.begin(host, 80, "/");
   websocket.onEvent(websocket_event);
-  websocket.setAuthorization("apikey", api_key);
+  websocket.setAuthorization("apikey", sinric_api_key.c_str());
   websocket.setReconnectInterval(5000);
 }
 

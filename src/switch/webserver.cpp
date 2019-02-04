@@ -75,6 +75,17 @@ void handle_root() {
     }
   }
 
+  const String &new_sinric_api_key = server.arg("sinric_api_key");
+  if (new_sinric_api_key.length() > 0) {
+    if (write_line_to_file("/sinric_api_key.txt", new_sinric_api_key.c_str())) {
+      sinric_api_key = new_sinric_api_key;
+      sinric_connect();
+    } else {
+      LOGLN("Failed to save new API key.");
+      error = "Failed to save new API key.";
+    }
+  }
+
   // Toggle switches
   for (size_t i = 0; i < num_switches; ++i) {
     if (server.hasArg(String("on") + i)) {
@@ -133,6 +144,11 @@ void handle_root() {
     "<form method=\"post\" action=\"/\">" +
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update admin password\"/>" +
+    "</form>" +
+    "<h2>Sinric</h2>" +
+    "<form method=\"post\" action=\"/\">" +
+    "API key: <input type=\"text\" name=\"sinric_api_key\" value=\"" + sinric_api_key + "\"/><br/>" +
+    "<input type=\"submit\" value=\"Update API key\"/>" +
     "</form>" +
     "<h2>Switch IDs</h2>" +
     "<form method=\"post\" action=\"/\"><table>" +

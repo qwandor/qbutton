@@ -22,6 +22,7 @@ extern const uint8_t switch_pins[];
 extern const char *const switch_names[];
 extern const size_t num_switches;
 
+extern String sinric_api_key;
 extern bool switch_inverted[];
 extern bool switch_initial_state[];
 extern String switch_ids[];
