@@ -38,6 +38,8 @@ void setup() {
 
   SPIFFS.begin();
 
+  sinric_setup();
+
   if (wifi_setup()) {
     sinric_connect();
   }
@@ -46,7 +48,6 @@ void setup() {
     LOGLN("Error starting mDNS");
   }
 
-  sinric_setup();
   start_webserver();
   #if OTA_UPDATE
   ArduinoOTA.setHostname(MDNS_HOSTNAME);
