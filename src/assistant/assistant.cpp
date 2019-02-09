@@ -21,6 +21,7 @@ limitations under the License.
 #include "stream_body.pb.h"
 #include "streamutils.h"
 #include "logging.h"
+#include "webserver.h"
 
 #include <pb_arduino.h>
 #include <Arduino.h>
@@ -221,6 +222,21 @@ bool oauth_with_code(const String &code) {
   return true;
 }
 
+void handle_oauth() {
+  const String &code = server.arg("code");
+  if (code.length() > 0) {
+    bool success = oauth_with_code(code);
+    if (success) {
+      server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Success</p><a href=\"/\">Home</a></body></html>");
+    } else {
+      server.send(200, "text/html", "<html><head><title>Auth</title></head><body><p>Failure</p><a href=\"/\">Home</a></body></html>");
+    }
+  } else {
+    server.send(200, "text/html", String("<html><head><title>Error</title></head><body><h1>Authentication error</h1><p>") +
+      server.arg("error") + "</p></body></html>");
+  }
+}
+
 // Use the refresh token to get a new auth token.
 // Return true on success.
 bool refresh_oauth() {
@@ -357,6 +373,7 @@ void auth_and_send_request(const String &command) {
 }
 
 bool assistant_init() {
+  server.on("/oauth", handle_oauth);
   if (!client.setCACert_P(globalsign_cacert, sizeof(globalsign_cacert))) {
     LOGLN("Failed to load root CA certificate.");
     return false;

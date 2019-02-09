@@ -48,12 +48,12 @@ void setup() {
   }
 
   load_commands();
+  assistant_init();
   start_webserver();
   #if OTA_UPDATE
   ArduinoOTA.setHostname(MDNS_HOSTNAME);
   ArduinoOTA.begin();
   #endif
-  assistant_init();
 }
 
 void loop() {

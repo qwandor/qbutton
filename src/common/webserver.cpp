@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "config.h"
 #include "logging.h"
-#include "sinric.h"
+#include "module_webserver.h"
 #include "streamutils.h"
 
 #include <Arduino.h>
@@ -26,7 +26,7 @@ limitations under the License.
 #include <FS.h>
 #include <time.h>
 
-static ESP8266WebServer server(80);
+ESP8266WebServer server(80);
 static String admin_password;
 
 bool write_wifi_config(const String &ssid, const String &password) {
@@ -75,49 +75,7 @@ void handle_root() {
     }
   }
 
-  const String &new_sinric_api_key = server.arg("sinric_api_key");
-  if (new_sinric_api_key.length() > 0) {
-    if (write_line_to_file("/sinric_api_key.txt", new_sinric_api_key.c_str())) {
-      sinric_api_key = new_sinric_api_key;
-      sinric_connect();
-    } else {
-      LOGLN("Failed to save new API key.");
-      error = "Failed to save new API key.";
-    }
-  }
-
-  // Toggle switches
-  for (size_t i = 0; i < num_switches; ++i) {
-    if (server.hasArg(String("on") + i)) {
-      switch_state[i] = true;
-      update_switch(i);
-      send_switch_state(i);
-      break;
-    } else if (server.hasArg(String("off") + i)) {
-      switch_state[i] = false;
-      update_switch(i);
-      send_switch_state(i);
-      break;
-    }
-  }
-
-  // Update switch IDs.
-  if (server.hasArg("update")) {
-    bool updated_switch_ids = false;
-    for (size_t i = 0; i < num_switches; ++i) {
-      if (server.hasArg(String("switch_id") + i)) {
-        switch_ids[i] = server.arg(String("switch_id") + i);
-        updated_switch_ids = true;
-      }
-      switch_initial_state[i] = server.hasArg(String("switch_initial") + i);
-      switch_inverted[i] = server.hasArg(String("switch_inverted") + i);
-      update_switch(i);
-    }
-    save_switch_config();
-    if (updated_switch_ids) {
-      save_switch_ids();
-    }
-  }
+  module_handle_root_args(server, error);
 
   // Read whatever is on disk.
   String ssid, password;
@@ -134,7 +92,7 @@ void handle_root() {
   struct tm timeinfo;
   gmtime_r(&now, &timeinfo);
 
-  String page = String("<html><head><title>qSwitch config</title></head><body><h1>qSwitch config</h1>") +
+  String page = String("<html><head><title>") + MDNS_HOSTNAME + " config</title></head><body><h1>" + MDNS_HOSTNAME + " config</h1>" +
     "<p style=\"color: red;\">" + error + "</p>" +
     "<p>Device time: " + asctime(&timeinfo) + "UTC</p>" +
     "<h2>WiFi config</h2>" +
@@ -147,24 +105,8 @@ void handle_root() {
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
     "<input type=\"submit\" value=\"Update admin password\"/>" +
     "</form>" +
-    "<h2>Sinric</h2>" +
-    "<form method=\"post\" action=\"/\">" +
-    "API key: <input type=\"text\" name=\"sinric_api_key\" value=\"" + sinric_api_key + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update API key\"/>" +
-    "</form>" +
-    "<h2>Switch IDs</h2>" +
-    "<form method=\"post\" action=\"/\"><table>" +
-    "<tr><th>Pin</th><th>Sinric ID</th><th>Initial</th><th>Inverted</th><th>State</th><th>Toggle</th></tr>";
-  for (size_t i = 0; i < num_switches; ++i) {
-    page = page + "<tr><td>" + switch_names[i] + " (pin" + switch_pins[i] + ")</td>" +
-      "<td><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/></td>" +
-      "<td><input type=\"checkbox\" name=\"switch_initial" + i + "\" value=\"1\"" + (switch_initial_state[i] ? " checked" : "") + "/></td>" +
-      "<td><input type=\"checkbox\" name=\"switch_inverted" + i + "\" value=\"1\"" + (switch_inverted[i] ? " checked" : "") + "/></td>" +
-      "<td>" + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)</td>" +
-      "<td><input type=\"submit\" name=\"" + (switch_state[i] ? "off" : "on") + i + "\" value=\"Switch " + (switch_state[i] ? "off" : "on") + "\"/></td></tr>";
-  }
-  page += "</table><input type=\"submit\" name=\"update\" value=\"Update switches\"/></form>";
-  page += "</body></html>";
+    module_root_output() +
+    "</body></html>";
   server.send(200, "text/html", page);
 }
 
