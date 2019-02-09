@@ -38,7 +38,9 @@ String load_command() {
 
 void module_handle_root_args(ESP8266WebServer &server, String &error) {
   const String &new_command = server.arg("command");
-  if (new_command.length() > 0) {
+  if (server.hasArg("update") && new_command.length() > 0) {
+    update_command(new_command.c_str());
+  } else if (server.hasArg("test")) {
     update_command(new_command.c_str());
     auth_and_send_request(new_command);
   }
@@ -49,7 +51,9 @@ String module_root_output() {
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
     WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
+    "<h2>Command</h2>" +
     "<form method=\"post\" action=\"/\">" +
     "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">" +
-    "<input type=\"submit\" value=\"Update command\"/></form>";
+    "<input type=\"submit\" name=\"update\" value=\"Update command\"/>" +
+    "<input type=\"submit\" name=\"test\" value=\"Update and test command\"/></form>";
 }
