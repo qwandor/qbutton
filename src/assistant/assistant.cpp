@@ -26,6 +26,7 @@ limitations under the License.
 #include <pb_arduino.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
 #include <WiFiClientSecure.h>
@@ -179,6 +180,7 @@ bool oauth_with_code(const String &code) {
 
   if (!client.verifyCertChain(oauth_host)) {
     LOGLN("Invalid certificate");
+    client.stop();
     return false;
   }
 
@@ -187,29 +189,25 @@ bool oauth_with_code(const String &code) {
                "grant_type=authorization_code&" +
                "redirect_uri=http://" + WiFi.localIP().toString() + "/oauth&" +
                "code=" + code;
-  client.print(String("POST /oauth2/v4/token HTTP/1.1\r\n") +
-               "Host: " + oauth_host + "\r\n" +
-               "Content-Type: application/x-www-form-urlencoded\r\n" +
-               "Content-Length: " + body.length() + "\r\n" +
-               "Connection: close\r\n\r\n");
-  client.print(body);
+  HTTPClient http_client;
+  http_client.begin(client, oauth_host, httpsPort, "/oauth2/v4/token", true);
+  http_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int return_code = http_client.POST(body);
 
   // Check status
-  String line = client.readStringUntil('\n');
-  if (!line.startsWith("HTTP/1.1 200 OK")) {
-    LOGLN(line);
-    print_response(client);
-    client.stop();
+  if (return_code != 200) {
+    LOG("Got error ");
+    LOGLN(return_code);
+    LOGLN(http_client.getString());
+    http_client.end();
     return false;
   }
 
-  // Skip headers
-  client.find("\r\n\r\n");
-
   DynamicJsonBuffer jb;
-  JsonObject &root = jb.parseObject(client);
+  JsonObject &root = jb.parseObject(http_client.getStream());
   if (!root.success()) {
     LOGLN("Failed to parse JSON response from OAuth");
+    http_client.end();
     return false;
   }
   const char *token = root["access_token"];
@@ -218,7 +216,7 @@ bool oauth_with_code(const String &code) {
   LOGLN(token);
   write_line_to_file("/refresh_token.txt", refresh_token);
   write_line_to_file("/token.txt", token);
-  client.stop();
+  http_client.end();
   return true;
 }
 
@@ -247,51 +245,45 @@ bool refresh_oauth() {
 
   if (!client.verifyCertChain(oauth_host)) {
     LOGLN("Invalid certificate");
-    return false;
-  }
-
-  File refreshTokenFile = SPIFFS.open("/refresh_token.txt", "r");
-  if (!refreshTokenFile) {
-    LOGLN("failed to read /refresh_token.txt");
-    return false;
-  }
-
-  String body = String("client_id=") + client_id + "&" +
-               "client_secret=" + client_secret + "&" +
-               "grant_type=refresh_token&" +
-               "refresh_token=";
-  client.print(String("POST /oauth2/v4/token HTTP/1.1\r\n") +
-               "Host: " + oauth_host + "\r\n" +
-               "Content-Type: application/x-www-form-urlencoded\r\n" +
-               "Content-Length: " + (body.length() + refreshTokenFile.size()) + "\r\n" +
-               "Connection: close\r\n\r\n");
-  client.print(body);
-  copyStreamToPrint(refreshTokenFile, client);
-  refreshTokenFile.close();
-
-  // Check status
-  String line = client.readStringUntil('\n');
-  if (!line.startsWith("HTTP/1.1 200 OK")) {
-    LOGLN(line);
-    print_response(client);
     client.stop();
     return false;
   }
 
-  // Skip headers
-  client.find("\r\n\r\n");
+  String refresh_token = read_line_from_file("/refresh_token.txt");
+  if (refresh_token.length() == 0) {
+    LOGLN("Failed to read refresh token.");
+    return false;
+  }
+  String body = String("client_id=") + client_id + "&" +
+               "client_secret=" + client_secret + "&" +
+               "grant_type=refresh_token&" +
+               "refresh_token=" + refresh_token;
+  HTTPClient http_client;
+  http_client.begin(client, oauth_host, httpsPort, "/oauth2/v4/token", true);
+  http_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int return_code = http_client.POST(body);
+
+  // Check status
+  if (return_code != 200) {
+    LOG("Got error ");
+    LOGLN(return_code);
+    LOGLN(http_client.getString());
+    http_client.end();
+    return false;
+  }
 
   DynamicJsonBuffer jb;
-  JsonObject &root = jb.parseObject(client);
+  JsonObject &root = jb.parseObject(http_client.getStream());
   if (!root.success()) {
     LOGLN("Failed to parse JSON response from OAuth refresh");
+    http_client.end();
     return false;
   }
   const char *token = root["access_token"];
   LOG("got new access token ");
   LOGLN(token);
   write_line_to_file("/token.txt", token);
-  client.stop();
+  http_client.end();
   return true;
 }
 
@@ -319,6 +311,7 @@ bool send_assistant_request(const String &command) {
 
   if (!client.verifyCertChain(host)) {
     LOGLN("Invalid certificate");
+    client.stop();
     return false;
   }
 
@@ -326,37 +319,27 @@ bool send_assistant_request(const String &command) {
   LOG("requesting path: ");
   LOGLN(path);
 
-  client.print(String("POST ") + path + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "User-Agent: BuildFailureDetectorESP8266\r\n" +
-               "Content-Type: application/x-protobuf\r\n" +
-               "Authorization: Bearer " + token + "\r\n" +
-               "Content-Length: " + request_buffer_stream.bytes_written + "\r\n" +
-               "Connection: close\r\n\r\n");
-
-  LOGLN("headers sent");
-  size_t bytes_sent = client.write(request_buffer, request_buffer_stream.bytes_written);
-  if (bytes_sent != request_buffer_stream.bytes_written) {
-    LOG("Tried to send ");
-    LOG(request_buffer_stream.bytes_written);
-    LOG(" bytes of request to server but only sent ");
-    LOGLN(bytes_sent);
-  }
-  LOGLN("body sent");
+  HTTPClient http_client;
+  http_client.begin(client, String(host), httpsPort, path, true);
+  http_client.addHeader("Content-Type", "application/x-protobuf");
+  http_client.addHeader("Authorization", String("Bearer ") + token);
   unsigned long sent_request_time = millis();
+  int return_code = http_client.POST(request_buffer, request_buffer_stream.bytes_written);
+
+  LOGLN("body sent");
 
   // Check status
-  String line = client.readStringUntil('\n');
-  if (!line.startsWith("HTTP/1.1 200 OK")) {
-    LOGLN(line);
-    client.stop();
+  if (return_code != 200) {
+    LOG("Got error ");
+    LOGLN(return_code);
+    http_client.end();
     return false;
   }
 
   LOG("success after ");
   LOG(millis() - sent_request_time);
   LOGLN(" ms");
-  client.stop();
+  http_client.end();
   return true;
 }
 
