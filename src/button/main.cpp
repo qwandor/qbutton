@@ -29,6 +29,8 @@ limitations under the License.
 
 DoubleResetDetect drd(DRD_TIMEOUT, DRD_ADDRESS);
 
+void test_audio();
+
 //////////////////
 // Entry points //
 //////////////////
@@ -49,6 +51,8 @@ void setup() {
   if (double_reset) {
     LOGLN("detected double reset");
   }
+  double_reset = true;
+  test_audio();
 
   SPIFFS.begin();
 

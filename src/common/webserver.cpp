@@ -115,6 +115,8 @@ void start_webserver() {
   admin_password = read_line_from_file("/password.txt");
 
   server.on("/", handle_root);
+  server.serveStatic("/screen_out.html", SPIFFS, "/screen_out.html");
+  server.serveStatic("/audio.pcm", SPIFFS, "/audio.pcm");
   server.begin();
   LOGLN("HTTP server started");
 }
