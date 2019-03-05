@@ -36,6 +36,8 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
+  system_update_cpu_freq(160);
+
   SPIFFS.begin();
 
   if (wifi_setup()) {

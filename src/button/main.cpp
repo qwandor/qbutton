@@ -44,6 +44,7 @@ void setup() {
   Serial.println();
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+  system_update_cpu_freq(160);
 
   if (double_reset) {
     LOGLN("detected double reset");
