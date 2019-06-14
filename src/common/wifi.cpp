@@ -68,6 +68,7 @@ bool wifi_connect() {
   }
   if (WiFi.status() != WL_CONNECTED) {
     LOGLN("Couldn't connect");
+    WiFi.mode(WIFI_OFF);
     return false;
   }
   LOGLN("");
