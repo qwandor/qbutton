@@ -50,8 +50,8 @@ limitations under the License.
 #elif ENV_SWITCH
 #define LED_PIN 2
 
-#define SWITCH_PINS {LED_PIN, D5, D6, D7, D8, D1, D2}
-#define SWITCH_NAMES {"LED", "D5", "D6", "D7", "D8", "D1", "D2"}
+#define SWITCH_PINS {LED_PIN, D5, D6, D7, D8}
+#define SWITCH_NAMES {"LED", "D5", "D6", "D7", "D8"}
 
 #define MDNS_HOSTNAME "qswitch"
 #define ADMIN_USERNAME "admin"
