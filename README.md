@@ -10,7 +10,8 @@ It is designed to be low-power so that it can run for a while from a small batte
 
 ### Setup
 1. Set your client ID, client secret and device model ID for the Google Assistant API in `config.h`.
-1. Build and install the firmware from the 'button' env using PlatformIO.
+1. Build and install the firmware from the 'button' env using [PlatformIO](https://platformio.org).
+    1. `$ platformio run --target upload --environment button`
 1. Connect the device to power. After a few seconds it will show up as an access point named qbutton.
 1. Connect to the access point from your phone or laptop.
 1. Open http://192.168.0.1/ or http://qbutton.local/ in your browser.
@@ -30,7 +31,8 @@ This is replacement firmware for the [Sonoff RF Bridge 433](https://www.itead.cc
 1. Connect a 3.3V USB serial adapter between the serial pins and your computer, remembering to swap to RX and TX lines.
 1. Switch the switch on the board towards the side that the serial pins are on.
 1. Connect the RF Bridge to power (either via the USB port or from the serial header, not both at the same time) while holding down the button on the side. You can release the button a few seconds after connecting pwoer. This puts it into reflashing mode.
-1. Build and install the firmware from the 'rfbridge' env using PlatformIO.
+1. Build and install the firmware from the 'rfbridge' env using [PlatformIO](https://platformio.org).
+    1. `$ platformio run --target upload --environment rfbridge`
 1. Disconnect power and the serial cable. Switch the switch back to the other side.
 1. Connect the bridge device to power. After a few seconds it will show up as an access point named qbutton.
 1. Connect to the access point from your phone or laptop.
@@ -50,13 +52,12 @@ This is a simple smart switch for switching on and off whatever devices you can 
 ### Setup
 1. Create an account on [Sinric](https://sinric.com/) and follow the instructions there to connect it to Google Home.
 1. Add devices there for each device you want to control, with device type 'Switch'.
-1. Copy your Sinric API key to `config.h`.
-1. Update `config.h` so that:
+1. If you're not using my circuit board design, update `config.h` so that:
     1. `SWITCH_PINS` has all the pins you want to be able to control.
     1. `SWITCH_NAMES` has the names you want to display for them in the web interface. These names don't have to match the names you use on Sinric; the names from Sinric are what Google Home will see.
-    1. `SWITCH_INVERTED` should be `true` if the output is active-low, or `false` if it's active-high.
-    1. `SWITCH_INITIAL_STATE` is the state you want the pin to have when the device is powered on.
-1. Build and install the firmware from the 'switch' env using PlatformIO.
+1. If you want to, enable OTA updates and network or serial logging for debugging in `config.h`.
+1. Build and install the firmware from the 'switch' env using [PlatformIO](https://platformio.org).
+    1. `$ platformio run --target upload --environment switch`
 1. Connect the device to power. After a few seconds it will show up as an access point named qswitch.
 1. Connect to the access point from your phone or laptop.
 1. Open http://192.168.0.1/ or http://qswitch.local/ in your browser.
@@ -64,5 +65,6 @@ This is a simple smart switch for switching on and off whatever devices you can 
 1. Reset the device. It should connect to your WiFi network.
 1. Connect to the same WiFi network and open http://qswitch.local/ in a browser, or find the device's IP address (from the serial console or your DHCP server) and use that.
 1. Set an admin password.
+1. Enter your Sinric API key.
 1. Enter the switch IDs from your Sinric account for each pin that you want to control.
 1. Connect whatever you want to control to the pins, and try controlling it from the Google Home app or Google Assistant.
