@@ -98,6 +98,8 @@ void handle_root() {
     "form > ul { list-style: none; padding: 0px }"
     "form > ul > li { display: flex; flex-wrap: wrap }"
     "form > ul > li > input[type=text] { flex-grow: 1 }"
+    "form > ul > li > span { margin-left: auto }"
+    "form > ul > li > span > input { height: 100% }"
     "</style>"
     "</head>"
     "<body>"
