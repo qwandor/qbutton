@@ -65,18 +65,25 @@ String module_root_output() {
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
     WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
-    "<h2>Commands</h2><form method=\"post\" action=\"/\"><ul>";
+    "<h2>Commands</h2>"
+    "<form method=\"post\" action=\"/\">"
+    "<ul>";
   for (uint i = 0; i < button_commands.size(); ++i) {
-    page = page + "<li>"
-      "<label for=\"command" + i + "\">" + button_commands[i].code.to_hex() + "</label>" +
-      "<input type=\"text\" id=\"command" + i + " name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>" +
-      "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/>" +
-      "<input type=\"submit\" name=\"test" + i + "\" value=\"Test command\"/></li>";
+    page += "<li>"
+      "<label for=\"command" + i + "\">" + button_commands[i].code.to_hex() + "</label>"
+      "<input type=\"text\" id=\"command" + i + " name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>"
+      "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/>"
+      "<input type=\"submit\" name=\"test" + i + "\" value=\"Test command\"/>"
+      "</li>";
   }
-  page = page + "</ul>" +
-     "<input type=\"submit\" name=\"update\" value=\"Update commands\"/></form>";
+  page += "</ul>"
+     "<input type=\"submit\" name=\"update\" value=\"Update commands\"/>"
+     "</form>";
   if (button_commands.size() < MAX_COMMANDS) {
-    page += "<form method=\"post\" action=\"/\"><input type=\"text\" name=\"new_command\"/><input type=\"submit\" value=\"Add command\"/></form>";
+    page += "<form method=\"post\" action=\"/\">"
+      "<input type=\"text\" name=\"new_command\"/>"
+      "<input type=\"submit\" value=\"Add command\"/>"
+      "</form>";
   }
   return page;
 }
