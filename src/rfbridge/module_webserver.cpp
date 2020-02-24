@@ -67,8 +67,9 @@ String module_root_output() {
     WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
     "<h2>Commands</h2><form method=\"post\" action=\"/\"><ul>";
   for (uint i = 0; i < button_commands.size(); ++i) {
-    page = page + "<li>" + button_commands[i].code.to_hex() +
-      "<input type=\"text\" name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>" +
+    page = page + "<li>"
+      "<label for=\"command" + i + "\">" + button_commands[i].code.to_hex() + "</label>" +
+      "<input type=\"text\" id=\"command" + i + " name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>" +
       "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/>" +
       "<input type=\"submit\" name=\"test" + i + "\" value=\"Test command\"/></li>";
   }
