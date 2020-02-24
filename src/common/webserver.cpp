@@ -92,21 +92,33 @@ void handle_root() {
   struct tm timeinfo;
   gmtime_r(&now, &timeinfo);
 
-  String page = String("<html><head><title>") + MDNS_HOSTNAME + " config</title></head><body><h1>" + MDNS_HOSTNAME + " config</h1>" +
-    "<p style=\"color: red;\">" + error + "</p>" +
-    "<p>Device time: " + asctime(&timeinfo) + "UTC</p>" +
-    "<h2>WiFi config</h2>" +
-    "<form method=\"post\" action=\"/\">" +
-    "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>" +
-    "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update WiFi config\"/></form>" +
-    "<h2>Admin password</h2>" +
-    "<form method=\"post\" action=\"/\">" +
-    "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update admin password\"/>" +
+  String page = String("<html><head><title>") + MDNS_HOSTNAME + " config</title>"
+    "<style>"
+    "html { margin: 8 auto; max-width: 800px }"
+    "form > ul { list-style: none; padding: 0px }"
+    "form > ul > li { display: flex; flex-wrap: wrap }"
+    "form > ul > li > input[type=text] { flex-grow: 1 }"
+    "</style>"
+    "</head>"
+    "<body>"
+    "<h1>" + MDNS_HOSTNAME + " config</h1>"
+    "<p style=\"color: red;\">" + error + "</p>"
+    "<p>Device time: " + asctime(&timeinfo) + "UTC</p>"
+    "<h2>WiFi config</h2>"
+    "<form method=\"post\" action=\"/\">"
+    "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>"
+    "Password: <input type=\"text\" name=\"password\" value=\"" + password + "\"/><br/>"
+    "<input type=\"submit\" value=\"Update WiFi config\"/>"
+    "</form>"
+    "<h2>Admin password</h2>"
+    "<form method=\"post\" action=\"/\">"
+    "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/>"
+    "<br/>"
+    "<input type=\"submit\" value=\"Update admin password\"/>"
     "</form>" +
     module_root_output() +
-    "</body></html>";
+    "</body>"
+    "</html>";
   server.send(200, "text/html", page);
 }
 
