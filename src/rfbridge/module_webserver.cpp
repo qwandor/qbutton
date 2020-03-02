@@ -69,7 +69,7 @@ String module_root_output() {
     "<form method=\"post\" action=\"/\">"
     "<ul>";
   for (uint i = 0; i < button_commands.size(); ++i) {
-    page += "<li>"
+    page += String("<li>") +
       "<label for=\"command" + i + "\">" + button_commands[i].code.to_hex() + "</label>"
       "<input type=\"text\" id=\"command" + i + " name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>"
       "<span>"
