@@ -149,13 +149,17 @@ bool encode_assist_request(pb_ostream_t *stream, const pb_field_t *field, void *
 bool encode_request(const char *command, pb_ostream_t *pb_out) {
   google_assistant_embedded_v1alpha2_AssistRequest assist_request = google_assistant_embedded_v1alpha2_AssistRequest_init_default;
   assist_request.which_type = google_assistant_embedded_v1alpha2_AssistRequest_config_tag;
+  assist_request.type.config.has_audio_out_config = true;
   assist_request.type.config.audio_out_config.encoding = google_assistant_embedded_v1alpha2_AudioOutConfig_Encoding_MP3;
   assist_request.type.config.audio_out_config.sample_rate_hertz = 16000;
-  assist_request.type.config.which_type = google_assistant_embedded_v1alpha2_AssistConfig_text_query_tag;
+  assist_request.type.config.has_screen_out_config = true;
   assist_request.type.config.screen_out_config.screen_mode = google_assistant_embedded_v1alpha2_ScreenOutConfig_ScreenMode_PLAYING;
+  assist_request.type.config.has_dialog_state_in = true;
   safe_copy("en-US", assist_request.type.config.dialog_state_in.language_code);
+  assist_request.type.config.has_device_config = true;
   safe_copy(device_id, assist_request.type.config.device_config.device_id);
   safe_copy(device_model_id, assist_request.type.config.device_config.device_model_id);
+  assist_request.type.config.which_type = google_assistant_embedded_v1alpha2_AssistConfig_text_query_tag;
   safe_copy(command, assist_request.type.config.type.text_query);
 
   google_rpc_StreamBody stream_body = google_rpc_StreamBody_init_default;
