@@ -151,9 +151,7 @@ bool encode_request(const char *command, pb_ostream_t *pb_out) {
   assist_request.which_type = google_assistant_embedded_v1alpha2_AssistRequest_config_tag;
   assist_request.type.config.audio_out_config.encoding = google_assistant_embedded_v1alpha2_AudioOutConfig_Encoding_MP3;
   assist_request.type.config.audio_out_config.sample_rate_hertz = 16000;
-  assist_request.type.config.which_type = google_assistant_embedded_v1alpha2_AssistConfig_audio_in_config_tag;
-  assist_request.type.config.type.audio_in_config.encoding = google_assistant_embedded_v1alpha2_AudioInConfig_Encoding_LINEAR16;
-  assist_request.type.config.type.audio_in_config.sample_rate_hertz = 16000;
+  assist_request.type.config.which_type = google_assistant_embedded_v1alpha2_AssistConfig_text_query_tag;
   assist_request.type.config.screen_out_config.screen_mode = google_assistant_embedded_v1alpha2_ScreenOutConfig_ScreenMode_PLAYING;
   safe_copy("en-US", assist_request.type.config.dialog_state_in.language_code);
   safe_copy(device_id, assist_request.type.config.device_config.device_id);
