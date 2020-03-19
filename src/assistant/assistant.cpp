@@ -192,7 +192,7 @@ bool oauth_with_code(const String &code) {
                "grant_type=authorization_code&" +
                "redirect_uri=http://" + WiFi.localIP().toString() + "/oauth&" +
                "code=" + code;
-  client.print(String("POST /oauth2/v4/token HTTP/1.1\r\n") +
+  client.print(String("POST /oauth2/v4/token HTTP/1.0\r\n") +
                "Host: " + oauth_host + "\r\n" +
                "Content-Type: application/x-www-form-urlencoded\r\n" +
                "Content-Length: " + body.length() + "\r\n" +
@@ -201,7 +201,7 @@ bool oauth_with_code(const String &code) {
 
   // Check status
   String line = client.readStringUntil('\n');
-  if (!line.startsWith("HTTP/1.1 200 OK")) {
+  if (!line.startsWith("HTTP/1.0 200 OK")) {
     LOGLN(line);
     print_response(client);
     client.stop();
@@ -268,7 +268,7 @@ bool refresh_oauth() {
                "client_secret=" + client_secret + "&" +
                "grant_type=refresh_token&" +
                "refresh_token=";
-  client.print(String("POST /oauth2/v4/token HTTP/1.1\r\n") +
+  client.print(String("POST /oauth2/v4/token HTTP/1.0\r\n") +
                "Host: " + oauth_host + "\r\n" +
                "Content-Type: application/x-www-form-urlencoded\r\n" +
                "Content-Length: " + (body.length() + refreshTokenFile.size()) + "\r\n" +
@@ -279,7 +279,7 @@ bool refresh_oauth() {
 
   // Check status
   String line = client.readStringUntil('\n');
-  if (!line.startsWith("HTTP/1.1 200 OK")) {
+  if (!line.startsWith("HTTP/1.0 200 OK")) {
     LOGLN(line);
     print_response(client);
     client.stop();
