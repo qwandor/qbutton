@@ -183,6 +183,7 @@ bool oauth_with_code(const String &code) {
 
   if (!client.verifyCertChain(oauth_host)) {
     LOGLN("Invalid certificate");
+    client.stop();
     return false;
   }
 
@@ -214,6 +215,7 @@ bool oauth_with_code(const String &code) {
   JsonObject &root = jb.parseObject(client);
   if (!root.success()) {
     LOGLN("Failed to parse JSON response from OAuth");
+    client.stop();
     return false;
   }
   const char *token = root["access_token"];
@@ -251,12 +253,14 @@ bool refresh_oauth() {
 
   if (!client.verifyCertChain(oauth_host)) {
     LOGLN("Invalid certificate");
+    client.stop();
     return false;
   }
 
   File refreshTokenFile = SPIFFS.open("/refresh_token.txt", "r");
   if (!refreshTokenFile) {
     LOGLN("failed to read /refresh_token.txt");
+    client.stop();
     return false;
   }
 
@@ -289,6 +293,7 @@ bool refresh_oauth() {
   JsonObject &root = jb.parseObject(client);
   if (!root.success()) {
     LOGLN("Failed to parse JSON response from OAuth refresh");
+    client.stop();
     return false;
   }
   const char *token = root["access_token"];
@@ -323,6 +328,7 @@ bool send_assistant_request(const String &command) {
 
   if (!client.verifyCertChain(host)) {
     LOGLN("Invalid certificate");
+    client.stop();
     return false;
   }
 
