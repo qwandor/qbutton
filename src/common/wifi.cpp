@@ -25,14 +25,19 @@ limitations under the License.
 #include <time.h>
 
 void sync_time() {
+  const time_t min_time = 3600 * 48;
+
   // Set clock using SNTP. This is necessary to verify SSL certificates.
   LOGLN("Setting time using SNTP");
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
   time_t now = time(nullptr);
-  while (now < 3600 * 48) {
-    delay(10);
-    LOG(".");
-    now = time(nullptr);
+  while (now < min_time) {
+    configTime(0, 0, "0.uk.pool.ntp.org", "1.uk.pool.ntp.org");
+    for (int i = 0; i < 200 && now < min_time; ++i) {
+      delay(10);
+      LOG(".");
+      now = time(nullptr);
+    }
+    LOG("\n");
   }
   LOGLN("");
   struct tm timeinfo;
