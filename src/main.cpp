@@ -110,6 +110,7 @@ void setup() {
   // No point trying to connect to the server if we are running in AP mode.
   if (wifi_setup() && serverHostname.length() > 0) {
     remoteClient.connect(serverHostname.c_str(), serverPort);
+    M5.Lcd.println("Connected");
   }
 
   localServer.begin();
@@ -124,6 +125,8 @@ void setup() {
   ArduinoOTA.setHostname(MDNS_HOSTNAME);
   ArduinoOTA.begin();
   #endif
+
+  M5.Lcd.println("Ready");
 }
 
 void drive(String direction, float speed) {
