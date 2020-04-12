@@ -130,28 +130,37 @@ void drive(String direction, float speed) {
   if (direction == "brake") {
     leftWheel.brake();
     rightWheel.brake();
+    BugCSetColor(0, 0);
   } else if (direction == "f") {
+    BugCSetColor(0x00ff00, 0x00ff00);
 		leftWheel.turn(true, speed);
 		rightWheel.turn(true, speed);
   } else if (direction == "b") {
+    BugCSetColor(0x0000ff, 0x0000ff);
 		leftWheel.turn(false, speed);
 		rightWheel.turn(false, speed);
   } else if (direction == "l") {
+    BugCSetColor(0x0000ff, 0x00ff00);
 		leftWheel.turn(false, speed);
 		rightWheel.turn(true, speed);
   } else if (direction == "r") {
+    BugCSetColor(0x00ff00, 0x0000ff);
 		leftWheel.turn(true, speed);
 		rightWheel.turn(false, speed);
   } else if (direction == "fl") {
+    BugCSetColor(0x000000, 0x00ff00);
 		leftWheel.brake();
 		rightWheel.turn(true, speed);
   } else if (direction == "fr") {
+    BugCSetColor(0x00ff00, 0x000000);
 		leftWheel.turn(true, speed);
 		rightWheel.brake();
   } else if (direction == "bl") {
+    BugCSetColor(0x000000, 0x0000ff);
 		leftWheel.brake();
 		rightWheel.turn(false, speed);
   } else if (direction == "br") {
+    BugCSetColor(0x0000ff, 0x000000);
     leftWheel.turn(false, speed);
     rightWheel.brake();
   } else {
@@ -165,11 +174,9 @@ void runCommand(String direction, float speed, int duration) {
   // Turn LED off while we drive.
   digitalWrite(LED_PIN, HIGH);
 
-  BugCSetColor(0x00ffff, 0xffff00);
   drive(direction, speed);
   delay(duration);
   drive("brake", 0);
-  BugCSetColor(0, 0);
 
   digitalWrite(LED_PIN, LOW);
 }
