@@ -22,11 +22,12 @@ limitations under the License.
 #include "streamutils.h"
 
 #include <Arduino.h>
-#include <ESP8266WebServer.h>
 #include <FS.h>
+#include <SPIFFS.h>
 #include <time.h>
+#include <WebServer.h>
 
-static ESP8266WebServer server(80);
+static WebServer server(80);
 static String admin_password;
 
 bool write_wifi_config(const String &ssid, const String &password) {
@@ -81,7 +82,7 @@ void handle_root() {
     serverHostname = new_server_hostname;
     serverPort = new_server_port.toInt();
     save_server_details();
-    remoteClient.connect(serverHostname, serverPort);
+    remoteClient.connect(serverHostname.c_str(), serverPort);
   }
 
   // Read whatever is on disk.

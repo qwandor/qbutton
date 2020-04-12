@@ -21,8 +21,6 @@ limitations under the License.
 #define SERIAL_LOGGING 1
 #define OTA_UPDATE 1
 
-#define LED_PIN D4
-
 #define MDNS_HOSTNAME "joist"
 #define ADMIN_USERNAME "admin"
 #define ADMIN_REALM "admin@qbutton"
@@ -30,16 +28,22 @@ limitations under the License.
 #define LOCAL_SERVER_PORT 10158
 
 #ifdef NODEMCU
+#define LED_PIN D4
 #define LEFT_PWM D1
 #define RIGHT_PWM D2
 #define LEFT_DIRECTION D3
 #define RIGHT_DIRECTION D4
 
-#else
+#elif defined(D1MINI)
+#define LED_PIN D4
 #define LEFT_PWM D1
 #define LEFT_FORWARD D5
 #define LEFT_REVERSE D2
 #define RIGHT_PWM D7
 #define RIGHT_FORWARD D6
 #define RIGHT_REVERSE D8
+
+#else
+#define LED_PIN M5_LED
+
 #endif

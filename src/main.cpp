@@ -21,32 +21,34 @@ limitations under the License.
 #include "streamutils.h"
 #include "webserver.h"
 #include "wifi.h"
+#include "bugC.h"
 
 #include <ArduinoOTA.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266WiFi.h>
+#include <ESPmDNS.h>
 #include <FS.h>
+#include <M5StickC.h>
+#include <SPIFFS.h>
+#include <WiFiClient.h>
+#include <WiFiServer.h>
 
 class Motor {
 public:
-  Motor(int forwardPin, int reversePin, int pwmPin): _forwardPin(forwardPin), _reversePin(reversePin), _pwmPin(pwmPin) {}
+  Motor(uint8_t posA, uint8_t posB): _posA(posA), _posB(posB) {}
 
   void brake() {
-    analogWrite(_pwmPin, 1023);
-    digitalWrite(_forwardPin, LOW);
-    digitalWrite(_reversePin, LOW);
+    BugCSetSpeed(_posA, 0);
+    BugCSetSpeed(_posB, 0);
   }
 
   void turn(bool forwards, float speed) {
-    digitalWrite(_forwardPin, forwards ? HIGH : LOW);
-    digitalWrite(_reversePin, forwards ? LOW : HIGH);
-    analogWrite(_pwmPin, speed * 1023);
+    int8_t speedScaled = forwards ? speed * 100 : speed * -100;
+    BugCSetSpeed(_posA, speedScaled);
+    BugCSetSpeed(_posB, speedScaled);
   }
 
 private:
-  int _forwardPin;
-  int _reversePin;
-  int _pwmPin;
+  uint8_t _posA;
+  uint8_t _posB;
 };
 
 String serverHostname;
@@ -56,8 +58,8 @@ WiFiServer localServer(LOCAL_SERVER_PORT);
 WiFiClient localClient;
 WiFiClient remoteClient;
 
-Motor leftWheel(LEFT_FORWARD, LEFT_REVERSE, LEFT_PWM);
-Motor rightWheel(RIGHT_FORWARD, RIGHT_REVERSE, RIGHT_PWM);
+Motor leftWheel(FRONT_LEFT, REAR_LEFT);
+Motor rightWheel(FRONT_RIGHT, REAR_RIGHT);
 
 bool load_server_details() {
   File file = SPIFFS.open("/server.txt", "r");
@@ -91,18 +93,12 @@ bool save_server_details() {
 //////////////////
 
 void setup() {
+  M5.begin();
+  M5.Axp.SetChargeCurrent(CURRENT_360MA);
+
   Serial.begin(115200);
   Serial.println();
   pinMode(LED_PIN, OUTPUT);
-  pinMode(LEFT_PWM, OUTPUT);
-  pinMode(LEFT_FORWARD, OUTPUT);
-  pinMode(LEFT_REVERSE, OUTPUT);
-  pinMode(RIGHT_PWM, OUTPUT);
-  pinMode(RIGHT_FORWARD, OUTPUT);
-  pinMode(RIGHT_REVERSE, OUTPUT);
-
-  digitalWrite(LEFT_PWM, LOW);
-  digitalWrite(RIGHT_PWM, LOW);
 
   digitalWrite(LED_PIN, LOW);
 
@@ -111,7 +107,7 @@ void setup() {
 
   // No point trying to connect to the server if we are running in AP mode.
   if (wifi_setup() && serverHostname.length() > 0) {
-    remoteClient.connect(serverHostname, serverPort);
+    remoteClient.connect(serverHostname.c_str(), serverPort);
   }
 
   localServer.begin();
@@ -167,9 +163,11 @@ void runCommand(String direction, float speed, int duration) {
   // Turn LED off while we drive.
   digitalWrite(LED_PIN, HIGH);
 
+  BugCSetColor(0x00ffff, 0xffff00);
   drive(direction, speed);
   delay(duration);
   drive("brake", 0);
+  BugCSetColor(0, 0);
 
   digitalWrite(LED_PIN, LOW);
 }
@@ -199,13 +197,16 @@ void processCommand(String line) {
 }
 
 void loop() {
+  M5.update();
   webserver_loop();
   #if OTA_UPDATE
   ArduinoOTA.handle();
   #endif
 
   if (!remoteClient) {
-    remoteClient.connect(serverHostname, serverPort);
+    if (serverHostname.length() > 0) {
+      remoteClient.connect(serverHostname.c_str(), serverPort);
+    }
   } else if (remoteClient.available() > 5) {
     String line = remoteClient.readStringUntil('\n');
     processCommand(line);

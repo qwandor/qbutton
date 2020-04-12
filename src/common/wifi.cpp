@@ -20,9 +20,10 @@ limitations under the License.
 #include "logging.h"
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <FS.h>
+#include <SPIFFS.h>
 #include <time.h>
+#include <WiFi.h>
 
 void sync_time() {
   // Set clock using SNTP. This is necessary to verify SSL certificates.
@@ -59,7 +60,7 @@ bool wifi_connect() {
   LOGLN("'");
   WiFi.mode(WIFI_STA);
   // Use mDNS hostname for DHCP too
-  WiFi.hostname(MDNS_HOSTNAME);
+  WiFi.setHostname(MDNS_HOSTNAME);
   WiFi.begin(ssid.c_str(), password.c_str());
   // Try to connect for 5 seconds
   for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i) {

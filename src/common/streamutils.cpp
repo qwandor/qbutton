@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <Arduino.h>
 #include <FS.h>
+#include <SPIFFS.h>
 
 // Copy all available bytes from the given Stream to the given Print
 void copyStreamToPrint(Stream &from, Print &to) {

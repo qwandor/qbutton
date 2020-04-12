@@ -15,7 +15,7 @@ limitations under the License.
  */
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
 
 extern String serverHostname;
 extern uint16_t serverPort;
