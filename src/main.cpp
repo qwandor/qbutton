@@ -95,6 +95,7 @@ bool save_server_details() {
 
 void setup() {
   M5.begin();
+  Wire.begin(0, 26, 400000);
   M5.Axp.SetChargeCurrent(CURRENT_360MA);
 
   Serial.begin(115200);
