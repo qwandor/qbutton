@@ -33,7 +33,7 @@ limitations under the License.
 
 class Motor {
 public:
-  Motor(uint8_t posA, uint8_t posB): _posA(posA), _posB(posB) {}
+  Motor(uint8_t posA, uint8_t posB, bool inverted): _posA(posA), _posB(posB), _inverted(inverted) {}
 
   void brake() {
     BugCSetSpeed(_posA, 0);
@@ -41,7 +41,7 @@ public:
   }
 
   void turn(bool forwards, float speed) {
-    int8_t speedScaled = forwards ? speed * 100 : speed * -100;
+    int8_t speedScaled = (forwards != _inverted) ? speed * 100 : speed * -100;
     BugCSetSpeed(_posA, speedScaled);
     BugCSetSpeed(_posB, speedScaled);
   }
@@ -49,6 +49,7 @@ public:
 private:
   uint8_t _posA;
   uint8_t _posB;
+  bool _inverted;
 };
 
 String serverHostname;
@@ -58,8 +59,8 @@ WiFiServer localServer(LOCAL_SERVER_PORT);
 WiFiClient localClient;
 WiFiClient remoteClient;
 
-Motor leftWheel(FRONT_LEFT, REAR_LEFT);
-Motor rightWheel(FRONT_RIGHT, REAR_RIGHT);
+Motor leftWheel(FRONT_LEFT, REAR_LEFT, false);
+Motor rightWheel(FRONT_RIGHT, REAR_RIGHT, true);
 
 bool load_server_details() {
   File file = SPIFFS.open("/server.txt", "r");
