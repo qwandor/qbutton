@@ -71,9 +71,10 @@ void update_switch(size_t i) {
     if (switch_brightness[i] == 100) {
       digitalWrite(switch_pins[i], switch_inverted[i] ? LOW : HIGH);
     } else {
-      int scaled_value = 255 * switch_brightness[i] / 100;
+      // ESP8266 uses a 0-1023 range for PWM rather than the standard Arduino 0-255.
+      int scaled_value = 1023 * switch_brightness[i] / 100;
       if (switch_inverted[i]) {
-        scaled_value = 255 - scaled_value;
+        scaled_value = 1023 - scaled_value;
       }
       analogWrite(switch_pins[i], scaled_value);
     }
