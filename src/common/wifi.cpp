@@ -66,8 +66,8 @@ bool wifi_connect() {
   // Use mDNS hostname for DHCP too
   WiFi.hostname(MDNS_HOSTNAME);
   WiFi.begin(ssid.c_str(), password.c_str());
-  // Try to connect for 5 seconds
-  for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i) {
+  // Try to connect for 10 seconds
+  for (int i = 0; i < 20 && WiFi.status() != WL_CONNECTED; ++i) {
     delay(500);
     LOG(".");
   }
