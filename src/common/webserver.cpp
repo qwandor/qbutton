@@ -56,6 +56,8 @@ void handle_root() {
     return;
   }
 
+  LOGLN("Start handle_root");
+
   // If a new SSID and password have been sent, save them.
   const String &new_admin_password = server.arg("admin_password");
   const String &new_ssid = server.arg("ssid");
@@ -75,6 +77,7 @@ void handle_root() {
     }
   }
 
+  LOGLN("module_handle_root_args");
   module_handle_root_args(server, error);
 
   // Read whatever is on disk.
@@ -120,7 +123,10 @@ void handle_root() {
     module_root_output() +
     "</body>"
     "</html>";
+  LOG("page length: ");
+  LOGLN(page.length());
   server.send(200, "text/html", page);
+  LOGLN("Finish handle_root");
 }
 
 // Run web server to let the user authenticate their account.

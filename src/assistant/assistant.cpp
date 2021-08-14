@@ -312,6 +312,7 @@ bool oauth_with_code(const String &code) {
 }
 
 void handle_oauth() {
+  LOGLN("Start handle_oauth");
   const String &code = server.arg("code");
   if (code.length() > 0) {
     bool success = oauth_with_code(code);
@@ -462,7 +463,9 @@ void auth_and_send_request(const String &command) {
   if (!refresh_oauth()) {
     return;
   }
-  send_assistant_request(command);
+  if (!send_assistant_request(command)) {
+    LOGLN("Second request failed");
+  }
 }
 
 bool assistant_init() {
