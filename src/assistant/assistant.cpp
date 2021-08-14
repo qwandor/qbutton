@@ -338,7 +338,7 @@ bool send_assistant_request(const String &command) {
 
   client.print(String("POST ") + path + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
-               "User-Agent: BuildFailureDetectorESP8266\r\n" +
+               "User-Agent: qbutton\r\n" +
                "Content-Type: application/x-protobuf\r\n" +
                "Authorization: Bearer " + token + "\r\n" +
                "Content-Length: " + request_buffer_stream.bytes_written + "\r\n" +
