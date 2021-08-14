@@ -190,7 +190,7 @@ bool oauth_with_code(const String &code) {
   String body = String("client_id=") + client_id + "&" +
                "client_secret=" + client_secret + "&" +
                "grant_type=authorization_code&" +
-               "redirect_uri=http://" + WiFi.localIP().toString() + "/oauth&" +
+               "redirect_uri=urn:ietf:wg:oauth:2.0:oob&" +
                "code=" + code;
   client.print(String("POST /oauth2/v4/token HTTP/1.0\r\n") +
                "Host: " + oauth_host + "\r\n" +

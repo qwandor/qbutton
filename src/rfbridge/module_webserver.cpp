@@ -63,8 +63,13 @@ void module_handle_root_args(ESP8266WebServer &server, String &error) {
 String module_root_output() {
   String page = String("<h2>Google account</h2>") +
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
-    "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline&response_type=code&redirect_uri=http://" +
-    WiFi.localIP().toString() + "/oauth&device_id=device_id&device_name=device_name\">Set account</a>" +
+    "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline"
+    "&response_type=code&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
+    "&device_id=device_id&device_name=device_name\" target=\"_blank\">Get auth token</a><br/>" +
+    "<form method=\"post\" action=\"/oauth\">"
+    "<input type=\"text\" name=\"code\"/>"
+    "<input type=\"submit\" value=\"Set auth token\"/>"
+    "</form>"
     "<h2>Commands</h2>"
     "<form method=\"post\" action=\"/\">"
     "<ul>";
