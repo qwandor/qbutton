@@ -30,7 +30,7 @@ limitations under the License.
 #include <FS.h>
 #include <WiFiClientSecure.h>
 
-static const char *oauth_host = "www.googleapis.com";
+static const char *oauth_host = "oauth2.googleapis.com";
 static const char *host = "embeddedassistant.googleapis.com";
 static const int httpsPort = 443;
 
@@ -192,7 +192,7 @@ bool oauth_with_code(const String &code) {
                "grant_type=authorization_code&" +
                "redirect_uri=urn:ietf:wg:oauth:2.0:oob&" +
                "code=" + code;
-  client.print(String("POST /oauth2/v4/token HTTP/1.0\r\n") +
+  client.print(String("POST /token HTTP/1.0\r\n") +
                "Host: " + oauth_host + "\r\n" +
                "Content-Type: application/x-www-form-urlencoded\r\n" +
                "Content-Length: " + body.length() + "\r\n" +
@@ -268,7 +268,7 @@ bool refresh_oauth() {
                "client_secret=" + client_secret + "&" +
                "grant_type=refresh_token&" +
                "refresh_token=";
-  client.print(String("POST /oauth2/v4/token HTTP/1.0\r\n") +
+  client.print(String("POST /token HTTP/1.0\r\n") +
                "Host: " + oauth_host + "\r\n" +
                "Content-Type: application/x-www-form-urlencoded\r\n" +
                "Content-Length: " + (body.length() + refreshTokenFile.size()) + "\r\n" +
