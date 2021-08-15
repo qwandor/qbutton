@@ -76,7 +76,7 @@ String module_root_output() {
   for (uint i = 0; i < button_commands.size(); ++i) {
     page += String("<li>") +
       "<label for=\"command" + i + "\">" + button_commands[i].code.to_hex() + "</label>"
-      "<input type=\"text\" id=\"command" + i + " name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>"
+      "<input type=\"text\" id=\"command" + i + "\" name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>"
       "<span>"
       "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/>"
       "<input type=\"submit\" name=\"test" + i + "\" value=\"Test command\"/>"
