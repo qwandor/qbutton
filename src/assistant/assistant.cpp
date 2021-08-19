@@ -98,12 +98,6 @@ bool oauth_with_code(const String &code) {
     return false;
   }
 
-  if (!client.verifyCertChain(oauth_host)) {
-    LOGLN("Invalid certificate");
-    client.stop();
-    return false;
-  }
-
   String body = String("client_id=") + client_id + "&" +
                "client_secret=" + client_secret + "&" +
                "grant_type=authorization_code&" +
@@ -167,12 +161,6 @@ bool refresh_oauth() {
   LOGLN("Start refresh_oauth");
   if (!client.connect(oauth_host, httpsPort)) {
     LOGLN("connection failed");
-    return false;
-  }
-
-  if (!client.verifyCertChain(oauth_host)) {
-    LOGLN("Invalid certificate");
-    client.stop();
     return false;
   }
 
@@ -243,12 +231,6 @@ bool send_assistant_request(const String &command) {
   LOGLN(host);
   if (!client.connect(host, httpsPort)) {
     LOGLN("connection failed");
-    return false;
-  }
-
-  if (!client.verifyCertChain(host)) {
-    LOGLN("Invalid certificate");
-    client.stop();
     return false;
   }
 
