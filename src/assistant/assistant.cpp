@@ -164,6 +164,7 @@ void handle_oauth() {
 // Use the refresh token to get a new auth token.
 // Return true on success.
 bool refresh_oauth() {
+  LOGLN("Start refresh_oauth");
   if (!client.connect(oauth_host, httpsPort)) {
     LOGLN("connection failed");
     return false;
@@ -224,6 +225,7 @@ bool refresh_oauth() {
 
 // Return true on success, false on failure for any reason.
 bool send_assistant_request(const String &command) {
+  LOGLN("Start send_assistant_request");
   String token = load_token();
   if (token.length() == 0 || command.length() == 0) {
     return false;

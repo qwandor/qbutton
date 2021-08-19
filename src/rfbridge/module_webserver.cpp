@@ -61,6 +61,7 @@ void module_handle_root_args(ESP8266WebServer &server, String &error) {
 }
 
 String module_root_output() {
+  LOGLN("Start module_root_output");
   String page = String("<h2>Google account</h2>") +
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline"
