@@ -28,6 +28,7 @@ limitations under the License.
 
 ESP8266WebServer server(80);
 static String admin_password;
+static time_t boot_time;
 
 bool write_wifi_config(const String &ssid, const String &password) {
   File wifiFile = SPIFFS.open("/wifi.txt", "w");
@@ -137,11 +138,30 @@ void handle_root() {
   LOGLN("Finish handle_root");
 }
 
+void handle_metrics() {
+  LOGLN("handle_metrics");
+  String page = String() +
+    "# TYPE free_heap gauge\n"
+    "# UNIT free_heap bytes\n"
+    "free_heap " + ESP.getFreeHeap() + "\n"
+    "# TYPE max_free_block_size gauge\n"
+    "# UNIT max_free_block_size bytes\n"
+    "max_free_block_size " + ESP.getMaxFreeBlockSize() + "\n"
+    "# TYPE node_boot_time_seconds gauge\n"
+    "# UNIT node_boot_time_seconds seconds\n"
+    "node_boot_time_seconds " + boot_time + "\n";
+
+  server.send(200, "text/plain", page);
+}
+
 // Run web server to let the user authenticate their account.
 void start_webserver() {
   admin_password = read_line_from_file("/password.txt");
+  boot_time = time(nullptr);
 
   server.on("/", handle_root);
+  server.on("/metrics", handle_metrics);
+
   server.begin();
   LOGLN("HTTP server started");
 }
