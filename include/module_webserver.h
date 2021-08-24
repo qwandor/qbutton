@@ -20,4 +20,4 @@ limitations under the License.
 #include <ESP8266WebServer.h>
 
 void module_handle_root_args(ESP8266WebServer &server, String &error);
-String module_root_output();
+void module_root_output(ESP8266WebServer &server);

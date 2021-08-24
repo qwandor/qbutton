@@ -95,7 +95,11 @@ void handle_root() {
   struct tm timeinfo;
   gmtime_r(&now, &timeinfo);
 
-  String page = String("<html><head><title>") + MDNS_HOSTNAME + " config</title>"
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, "text/html", "");
+  server.sendContent("<html><head><title>");
+  server.sendContent(MDNS_HOSTNAME);
+  server.sendContent(" config</title>"
     "<style>"
     "form > ul { list-style: none; padding: 0px }"
     "form > ul > li { display: flex; flex-wrap: wrap; max-width: 800px }"
@@ -105,9 +109,15 @@ void handle_root() {
     "</style>"
     "</head>"
     "<body>"
-    "<h1>" + MDNS_HOSTNAME + " config</h1>"
-    "<p style=\"color: red;\">" + error + "</p>"
-    "<p>Device time: " + asctime(&timeinfo) + "UTC</p>"
+    "<h1>");
+  server.sendContent(MDNS_HOSTNAME);
+  server.sendContent(" config</h1>"
+    "<p style=\"color: red;\">");
+  server.sendContent(error);
+  server.sendContent("</p>"
+    "<p>Device time: ");
+  server.sendContent(asctime(&timeinfo));
+  server.sendContent("UTC</p>"
     "<h2>WiFi config</h2>"
     "<form method=\"post\" action=\"/\">"
     "SSID: <input type=\"text\" name=\"ssid\" value=\"" + ssid + "\"/><br/>"
@@ -119,13 +129,11 @@ void handle_root() {
     "<input type=\"text\" name=\"admin_password\" value=\"" + admin_password + "\"/>"
     "<br/>"
     "<input type=\"submit\" value=\"Update admin password\"/>"
-    "</form>" +
-    module_root_output() +
-    "</body>"
-    "</html>";
-  LOG("page length: ");
-  LOGLN(page.length());
-  server.send(200, "text/html", page);
+    "</form>");
+  module_root_output(server);
+  server.sendContent("</body></html>");
+  // Finish the page.
+  server.sendContent("");
   LOGLN("Finish handle_root");
 }
 

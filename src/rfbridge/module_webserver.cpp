@@ -60,38 +60,38 @@ void module_handle_root_args(ESP8266WebServer &server, String &error) {
   }
 }
 
-String module_root_output() {
+void module_root_output(ESP8266WebServer &server) {
   LOGLN("Start module_root_output");
-  String page = String("<h2>Google account</h2>") +
-    "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
-    "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline"
+  server.sendContent("<h2>Google account</h2>");
+  server.sendContent("<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=");
+  server.sendContent(client_id);
+  server.sendContent("&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline"
     "&response_type=code&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
-    "&device_id=device_id&device_name=device_name\" target=\"_blank\">Get auth token</a><br/>" +
+    "&device_id=device_id&device_name=device_name\" target=\"_blank\">Get auth token</a><br/>"
     "<form method=\"post\" action=\"/oauth\">"
     "<input type=\"text\" name=\"code\"/>"
     "<input type=\"submit\" value=\"Set auth token\"/>"
     "</form>"
     "<h2>Commands</h2>"
     "<form method=\"post\" action=\"/\">"
-    "<ul>";
+    "<ul>");
   for (uint i = 0; i < button_commands.size(); ++i) {
-    page += String("<li>") +
+    server.sendContent(String("<li>") +
       "<label for=\"command" + i + "\">" + button_commands[i].code.to_hex() + "</label>"
       "<input type=\"text\" id=\"command" + i + "\" name=\"command" + i + "\" value=\"" + button_commands[i].command + "\"/>"
       "<span>"
       "<input type=\"submit\" name=\"delete" + i + "\" value=\"Delete\"/>"
       "<input type=\"submit\" name=\"test" + i + "\" value=\"Test command\"/>"
       "</span>"
-      "</li>";
+      "</li>");
   }
-  page += "</ul>"
+  server.sendContent("</ul>"
      "<input type=\"submit\" name=\"update\" value=\"Update commands\"/>"
-     "</form>";
+     "</form>");
   if (button_commands.size() < MAX_COMMANDS) {
-    page += "<form method=\"post\" action=\"/\">"
+    server.sendContent("<form method=\"post\" action=\"/\">"
       "<input type=\"text\" name=\"new_command\"/>"
       "<input type=\"submit\" value=\"Add command\"/>"
-      "</form>";
+      "</form>");
   }
-  return page;
 }

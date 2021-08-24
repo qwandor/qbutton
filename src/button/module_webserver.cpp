@@ -46,19 +46,19 @@ void module_handle_root_args(ESP8266WebServer &server, String &error) {
   }
 }
 
-String module_root_output() {
-  return String("<h2>Google account</h2>") +
+void module_root_output(ESP8266WebServer &server) {
+  server.sendContent(String("<h2>Google account</h2>") +
     "<a href=\"https://accounts.google.com/o/oauth2/v2/auth?client_id=" + client_id +
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fassistant-sdk-prototype&access_type=offline"
     "&response_type=code&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
-    "&device_id=device_id&device_name=device_name\" target=\"_blank\">Get auth token</a><br/>" +
+    "&device_id=device_id&device_name=device_name\" target=\"_blank\">Get auth token</a><br/>"
     "<form method=\"post\" action=\"/oauth\">"
     "<input type=\"text\" name=\"code\"/>"
     "<input type=\"submit\" value=\"Set auth token\"/>"
     "</form>"
-    "<h2>Command</h2>" +
+    "<h2>Command</h2>"
     "<form method=\"post\" action=\"/\">" +
-    "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">" +
-    "<input type=\"submit\" name=\"update\" value=\"Update command\"/>" +
-    "<input type=\"submit\" name=\"test\" value=\"Update and test command\"/></form>";
+    "Command: <input type=\"text\" name=\"command\" value=\"" + load_command() + "\">"
+    "<input type=\"submit\" name=\"update\" value=\"Update command\"/>"
+    "<input type=\"submit\" name=\"test\" value=\"Update and test command\"/></form>");
 }

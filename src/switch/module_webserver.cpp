@@ -69,23 +69,22 @@ void module_handle_root_args(ESP8266WebServer &server, String &error) {
   }
 }
 
-String module_root_output() {
-  String page = String("<h2>Sinric</h2>") +
+void module_root_output(ESP8266WebServer &server) {
+  server.sendContent(String("<h2>Sinric</h2>") +
     "<form method=\"post\" action=\"/\">" +
-    "API key: <input type=\"text\" name=\"sinric_api_key\" value=\"" + sinric_api_key + "\"/><br/>" +
-    "<input type=\"submit\" value=\"Update API key\"/>" +
-    "</form>" +
-    "<h2>Switch IDs</h2>" +
-    "<form method=\"post\" action=\"/\"><table>" +
-    "<tr><th>Pin</th><th>Sinric ID</th><th>Initial</th><th>Inverted</th><th>State</th><th>Toggle</th></tr>";
+    "API key: <input type=\"text\" name=\"sinric_api_key\" value=\"" + sinric_api_key + "\"/><br/>"
+    "<input type=\"submit\" value=\"Update API key\"/>"
+    "</form>"
+    "<h2>Switch IDs</h2>"
+    "<form method=\"post\" action=\"/\"><table>"
+    "<tr><th>Pin</th><th>Sinric ID</th><th>Initial</th><th>Inverted</th><th>State</th><th>Toggle</th></tr>");
   for (size_t i = 0; i < num_switches; ++i) {
-    page = page + "<tr><td>" + switch_names[i] + " (pin" + switch_pins[i] + ")</td>" +
-      "<td><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/></td>" +
-      "<td><input type=\"checkbox\" name=\"switch_initial" + i + "\" value=\"1\"" + (switch_initial_state[i] ? " checked" : "") + "/></td>" +
-      "<td><input type=\"checkbox\" name=\"switch_inverted" + i + "\" value=\"1\"" + (switch_inverted[i] ? " checked" : "") + "/></td>" +
-      "<td>" + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)</td>" +
-      "<td><input type=\"submit\" name=\"" + (switch_state[i] ? "off" : "on") + i + "\" value=\"Switch " + (switch_state[i] ? "off" : "on") + "\"/></td></tr>";
+    server.sendContent(String("<tr><td>") + switch_names[i] + " (pin" + switch_pins[i] + ")</td>"
+      "<td><input type=\"text\" name=\"switch_id" + i + "\" value=\"" + switch_ids[i] + "\"/></td>"
+      "<td><input type=\"checkbox\" name=\"switch_initial" + i + "\" value=\"1\"" + (switch_initial_state[i] ? " checked" : "") + "/></td>"
+      "<td><input type=\"checkbox\" name=\"switch_inverted" + i + "\" value=\"1\"" + (switch_inverted[i] ? " checked" : "") + "/></td>"
+      "<td>" + (switch_state[i] ? "on" : "off") + " (" + switch_brightness[i] + "%)</td>"
+      "<td><input type=\"submit\" name=\"" + (switch_state[i] ? "off" : "on") + i + "\" value=\"Switch " + (switch_state[i] ? "off" : "on") + "\"/></td></tr>");
   }
-  page += "</table><input type=\"submit\" name=\"update\" value=\"Update switches\"/></form>";
-  return page;
+  server.sendContent("</table><input type=\"submit\" name=\"update\" value=\"Update switches\"/></form>");
 }

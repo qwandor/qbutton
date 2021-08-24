@@ -22,6 +22,5 @@ limitations under the License.
 void module_handle_root_args(ESP8266WebServer &server, String &error) {
 }
 
-String module_root_output() {
-  return String();
+void module_root_output(ESP8266WebServer &server) {
 }
