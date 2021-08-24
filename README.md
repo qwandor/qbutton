@@ -9,6 +9,7 @@ This is a simple standalone WiFi-connected button. It sends a pre-programmed com
 It is designed to be low-power so that it can run for a while from a small battery. It remains off or in low-power mode until the button is pressed, then quickly starts up, connects to WiFi, sends the command, and turns off again.
 
 ### Setup
+1. Copy `config.h.example` to `config.h`.
 1. Set your client ID, client secret and device model ID for the Google Assistant API in `config.h`.
 1. Build and install the firmware from the 'button' env using [PlatformIO](https://platformio.org).
     1. `$ platformio run --target upload --environment button`
@@ -26,6 +27,7 @@ It is designed to be low-power so that it can run for a while from a small batte
 This is replacement firmware for the [Sonoff RF Bridge 433](https://www.itead.cc/wiki/Sonoff_RF_Bridge_433), which lets you pair a large number of 433 MHz RF buttons (of which there are [many available](https://www.aliexpress.com/wholesale?SearchText=433mhz+rf+button)) and have each send a certain Google Assistant command.
 
 ### Setup
+1. Copy `config.h.example` to `config.h`.
 1. Set your client ID, client secret and device model ID for the Google Assistant API in `config.h`.
 1. Open the Sonoff RF Bridge (screws are under stickers on the base), solder a 4 pin header for the serial port. The [Tasmota wiki](https://github.com/arendst/Sonoff-Tasmota/wiki/Hardware-Preparation) has some more details.
 1. Connect a 3.3V USB serial adapter between the serial pins and your computer, remembering to swap to RX and TX lines.
@@ -52,6 +54,7 @@ This is a simple smart switch for switching on and off whatever devices you can 
 ### Setup
 1. Create an account on [Sinric](https://sinric.com/) and follow the instructions there to connect it to Google Home.
 1. Add devices there for each device you want to control, with device type 'Switch'.
+1. Copy `config.h.example` to `config.h`.
 1. If you're not using my circuit board design, update `config.h` so that:
     1. `SWITCH_PINS` has all the pins you want to be able to control.
     1. `SWITCH_NAMES` has the names you want to display for them in the web interface. These names don't have to match the names you use on Sinric; the names from Sinric are what Google Home will see.
