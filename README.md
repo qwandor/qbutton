@@ -47,6 +47,9 @@ This is replacement firmware for the [Sonoff RF Bridge 433](https://www.itead.cc
 1. Enter a command for the first button you want to pair, and click 'Add command'. The bridge should beep.
 1. Hold the RF button you are pairing down until the bridge beeps again.
 1. Repeat for the rest of the buttons you want to pair.
+1. To reflash, run:
+    1. `$ PLATFORMIO_UPLOAD_PORT=qbutton.local platformio run --target upload --environment miniupdate`
+    1. `$ PLATFORMIO_UPLOAD_PORT=qbutton.local platformio run --target upload --environment rfbridge`
 
 ## Smart switch
 This is a simple smart switch for switching on and off whatever devices you can attach to the pins of your ESP8266 board from Google Home, via the [Sinric](https://sinric.com/) service. It's well suited for low voltage devices, such as fairy lights that can run off 5V from a USB power supply.
