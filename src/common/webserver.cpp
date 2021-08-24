@@ -112,11 +112,13 @@ void handle_root() {
     "<body>"
     "<h1>");
   server.sendContent(MDNS_HOSTNAME);
-  server.sendContent(" config</h1>"
-    "<p style=\"color: red;\">");
-  server.sendContent(error);
-  server.sendContent("</p>"
-    "<p>Device time: ");
+  server.sendContent(" config</h1>");
+  if (!error.isEmpty()) {
+    server.sendContent("<p style=\"color: red;\">");
+    server.sendContent(error);
+    server.sendContent("</p>");
+  }
+  server.sendContent("<p>Device time: ");
   server.sendContent(asctime(&timeinfo));
   server.sendContent("UTC</p>"
     "<h2>WiFi config</h2>"
